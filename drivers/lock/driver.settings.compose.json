@@ -1,0 +1,29 @@
+[
+    {
+        "id": "autoClose",
+        "type": "checkbox",
+        "label": {
+            "en": "Auto-Close Lock"
+        },
+        "value": false,
+        "hint": {
+            "en": "Close the lock automatically after a delay."
+        }
+    },
+    {
+        "id": "autoCloseDelay",
+        "type": "number",
+        "label": {
+            "en": "Auto-Close Delay"
+        },
+        "hint": {
+            "en": "The delay in seconds before the lock auto closes."
+        },
+        "value": 30,
+        "min": 0,
+        "max": 600,
+        "units": {
+            "en": "seconds"
+        }
+    }
+]

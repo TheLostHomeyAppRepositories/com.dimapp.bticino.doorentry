@@ -1,0 +1,29 @@
+{
+  "id": "com.dimapp.bticino.doorentry",
+  "version": "1.0.0",
+  "compatibility": ">=12.4.0",
+  "sdk": 3,
+  "platforms": [
+    "local"
+  ],
+  "name": {
+    "en": "BTicino Door Entry"
+  },
+  "description": {
+    "en": "Homey app to automate BTicino devices that uses Door Entry app"
+  },
+  "category": [
+    "appliances"
+  ],
+  "permissions": [],
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": {
+    "name": "Simone Di Maio",
+    "email": "simone.dimaio77@gmail.com"
+  },
+  "brandColor": "#f36f21"
+}

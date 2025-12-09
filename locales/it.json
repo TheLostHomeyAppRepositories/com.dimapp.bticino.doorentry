@@ -1,0 +1,15 @@
+{
+	"pair": {
+		"login": {
+			"title": "Accedi al tuo account BTicino",
+			"description": "Homey deve autenticarsi su BTicino-DoorEntry per rilevare i tuoi impianti.",
+			"step_open": "Apri la pagina di LogIn a BTicino usando il pulsante qui sotto.",
+            "open_link": "Apri pagina di LogIn"
+		},
+		"choose_plant": {
+			"title": "Seleziona il tuo impianto BTicino",
+			"confirm": "Conferma"
+		},
+        "success_message": "Ora puoi chiudere questa finestra."
+	}
+}

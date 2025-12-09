@@ -1,0 +1,15 @@
+{
+	"pair": {
+		"login": {
+			"title": "Sign in to your BTicino account",
+			"description": "Homey needs to authenticate with BTicino-DoorEntry to discover your gateways.",
+			"step_open": "Open the BTicino login page using the button below.",
+			"open_link": "Open login page"
+		},
+		"choose_plant": {
+			"title": "Choose your BTicino plant",
+			"confirm": "Confirm"
+		},
+		"success_message": "You can now close this window."
+	}
+}
