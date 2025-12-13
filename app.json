@@ -11,7 +11,8 @@
     "en": "BTicino Door Entry"
   },
   "description": {
-    "en": "Homey app to automate BTicino devices that uses Door Entry app"
+    "en": "Turn your BTicino door entry system into a smart home gateway",
+    "it": "Trasforma il tuo videocitofono BTicino in un gateway smart home"
   },
   "category": [
     "appliances"
@@ -27,6 +28,32 @@
     "email": "simone.dimaio77@gmail.com"
   },
   "brandColor": "#f36f21",
+  "source": "https://github.com/s-dimaio/com.dimapp.bticino.doorentry.git",
+  "bugs": {
+    "url": "https://github.com/s-dimaio/com.dimapp.bticino.doorentry/issues"
+  },
+  "tags": {
+    "en": [
+      "BTicino",
+      "Door Entry",
+      "Intercom",
+      "Video Doorbell"
+    ],
+    "it": [
+      "BTicino",
+      "Door Entry",
+      "Citofono",
+      "Videocitofono",
+      "Campanello"
+    ]
+  },
+  "contributing": {
+    "donate": {
+      "paypal": {
+        "username": "sdimaio77"
+      }
+    }
+  },
   "flow": {
     "triggers": [
       {
@@ -48,7 +75,7 @@
               "it": "Ora"
             },
             "example": {
-              "en": "13/12/2025, 18:23:39",
+              "en": "12/13/2025, 6:23:39 PM",
               "it": "13/12/2025, 18:23:39"
             }
           }
@@ -59,7 +86,7 @@
   "drivers": [
     {
       "name": {
-        "en": "Lock"
+        "en": "EasyKit"
       },
       "class": "lock",
       "capabilities": [

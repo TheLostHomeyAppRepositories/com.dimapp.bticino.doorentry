@@ -160,7 +160,7 @@ Email: simone.dimaio77@gmail.com
 
 ## Changelog
 
-### v1.1.0
+### v1.1.1
 - Added real-time doorbell notifications via SIP listener
 - Added Flow trigger card "Doorbell rang" with timestamp token
 - Improved credential caching for faster subsequent pairings

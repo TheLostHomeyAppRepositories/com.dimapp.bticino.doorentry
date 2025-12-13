@@ -1,6 +1,6 @@
 {
   "id": "com.dimapp.bticino.doorentry",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "compatibility": ">=12.4.0",
   "sdk": 3,
   "platforms": [
@@ -10,8 +10,8 @@
     "en": "BTicino Door Entry"
   },
   "description": {
-    "en": "Turn your BTicino door entry system into a smart home gateway",
-    "it": "Trasforma il tuo videocitofono BTicino in un gateway smart home"
+    "en": "Turn your BTicino Door Entry system into a smart home gateway",
+    "it": "Trasforma il tuo sistema BTicino Door Entry in un gateway smart home"
   },
   "category": [
     "appliances"
