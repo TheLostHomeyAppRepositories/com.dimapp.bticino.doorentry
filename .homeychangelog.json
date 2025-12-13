@@ -6,5 +6,9 @@
   "1.1.1": {
     "en": "Improved translations",
     "it": "Traduzioni migliorate"
+  },
+  "1.1.2": {
+    "en": "Fixed a TCP read timeout that caused disconnection of the SIP listener used for incoming call notifications",
+    "it": "Sistemato un timeout di lettura TCP che causava la disconnessione del SIP listener usato per le notifiche di chiamata in arrivo"
   }
 }
