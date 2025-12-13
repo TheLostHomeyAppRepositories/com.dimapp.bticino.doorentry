@@ -1,0 +1,25 @@
+{
+  "id": "doorbell_rang",
+  "title": {
+    "en": "Doorbell rang",
+    "it": "Campanello suonato"
+  },
+  "hint": {
+    "en": "When someone rings the doorbell",
+    "it": "Quando qualcuno suona il campanello"
+  },
+  "tokens": [
+    {
+      "name": "timestamp",
+      "type": "string",
+      "title": {
+        "en": "Time",
+        "it": "Ora"
+      },
+      "example": {
+        "en": "12/13/2025, 6:23:39 PM",
+        "it": "13/12/2025, 18:23:39"
+      }
+    }
+  ]
+}

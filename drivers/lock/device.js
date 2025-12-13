@@ -1,7 +1,7 @@
 'use strict';
 
 const Homey = require('homey');
-const { openGate } = require('door-entry/lib/sip/BticinoControls');
+const { openGate } = require('door-entry');
 
 module.exports = class BticinoGateDevice extends Homey.Device {
 
@@ -59,6 +59,64 @@ module.exports = class BticinoGateDevice extends Homey.Device {
         await this.setCapabilityValue('locked', true).catch(this.error);
       }
     });
+
+    // Try to start SIP listener if not already running
+    await this._ensureSipListenerStarted();
+  }
+
+  /**
+   * Ensure the SIP listener is started.
+   * This is called on device init and onAdded to make sure
+   * the listener is running when at least one device exists.
+   */
+  async _ensureSipListenerStarted() {
+    try {
+      const app = this.homey.app;
+      
+      if (!app || !app.auth) {
+        this.log('App or auth not ready yet');
+        return;
+      }
+
+      // Check if listener already exists and is connected
+      if (app.auth.hasSipListener() && app.auth.isSipListenerConnected()) {
+        this.log('SIP Listener already running');
+        return;
+      }
+
+      // Try to start the listener
+      this.log('Ensuring SIP listener is started...');
+      const started = await app.startSipListener();
+      
+      if (started) {
+        this.log('SIP Listener confirmed running');
+      } else {
+        this.log('SIP Listener could not be started (missing credentials?)');
+      }
+
+    } catch (e) {
+      this.error('Error ensuring SIP listener:', e && e.message);
+    }
+  }
+
+  /**
+   * onAdded is called when the user adds the device, called just after pairing.
+   */
+  async onAdded() {
+    this.log('BTicino gate device has been added:', this.getName());
+    
+    // Start the SIP listener now that device is added and credentials should be available
+    await this._ensureSipListenerStarted();
+  }
+
+  /**
+   * onSettings is called when the user updates the device's settings.
+   */
+  async onSettings({ oldSettings, newSettings, changedKeys }) {
+    this.log('BTicino gate device settings changed:', changedKeys);
+
+    // Try to start SIP listener if not already running
+    await this._ensureSipListenerStarted();
   }
 
   /**

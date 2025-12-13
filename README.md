@@ -8,6 +8,8 @@ A Homey app to automate BTicino devices (locks/gates) that use the BTicino Door 
 - **Multi-Plant Support**: Manage devices across multiple BTicino plants/installations
 - **Automatic Device Discovery**: Discover all BTicino locks/gates available on your account
 - **Secure SIP Control**: TLS-encrypted SIP communication for gate/lock control
+- **Real-Time Doorbell Notifications**: SIP listener automatically detects when someone rings the doorbell
+- **Flow Integration**: Trigger automations when the doorbell rings with timestamp tokens
 - **Auto-Close Support**: Optional automatic lock closing with configurable delay
 
 ## Requirements
@@ -45,6 +47,22 @@ A Homey app to automate BTicino devices (locks/gates) that use the BTicino Door 
 - **Auto-Close Lock**: Enable automatic gate closing after unlock
 - **Auto-Close Delay**: Configurable delay (0-600 seconds, default: 30)
 
+## Flow Cards
+
+### Trigger Cards
+
+#### Doorbell Rang
+Triggers when someone rings the doorbell. The SIP listener automatically detects incoming calls and triggers this flow card.
+
+**Tokens:**
+- `timestamp`: The time when the doorbell rang, formatted according to your Homey's language and timezone settings
+
+**Use Cases:**
+- Send notifications when someone is at the door
+- Turn on lights or camera recordings
+- Log doorbell activity
+- Automatically open the gate for expected visitors during specific times
+
 ### Troubleshooting Connection Issues
 
 If the login link is unreachable:
@@ -66,6 +84,17 @@ If the login link is unreachable:
 
 ## Troubleshooting
 
+### SIP Listener Not Starting
+- Ensure credentials and certificates were provisioned during pairing
+- Check Homey logs for authentication errors
+- Try re-pairing the device to refresh credentials
+
+### Doorbell Notifications Not Working
+- Verify the SIP listener is connected (check Homey logs for "SIP Listener registered")
+- Ensure the gateway ID matches your device
+- Check that your BTicino account has doorbell/intercom devices configured
+- Restart the app if the listener disconnected
+
 ### Pairing Fails at Login
 - Ensure your BTicino account credentials are correct
 - Check that Homey has internet connectivity
@@ -85,9 +114,15 @@ If the login link is unreachable:
 
 ### Architecture
 
-- **App** (`app.js`): Handles authentication setup and token/certificate lifecycle
+- **App** (`app.js`): Handles authentication setup, token/certificate lifecycle, and SIP listener for doorbell notifications
 - **Driver** (`drivers/lock/driver.js`): Manages pairing flow and device discovery
-- **Device** (`drivers/lock/device.js`): Controls individual locks via SIP
+- **Device** (`drivers/lock/device.js`): Controls individual locks via SIP and manages auto-close functionality
+
+### Key Components
+
+- **SIP Listener**: Persistent connection that monitors doorbell events and triggers Flow cards
+- **Authentication Handler**: Manages OAuth2 tokens and automatic token refresh
+- **Certificate Management**: Provisions and renews TLS certificates for secure SIP communication
 
 ### Building & Testing
 
@@ -124,6 +159,14 @@ For issues, feature requests, or questions:
 Email: simone.dimaio77@gmail.com
 
 ## Changelog
+
+### v1.1.0
+- Added real-time doorbell notifications via SIP listener
+- Added Flow trigger card "Doorbell rang" with timestamp token
+- Improved credential caching for faster subsequent pairings
+- Added automatic SIP listener reconnection on connection loss
+- Added timezone and language-aware timestamp formatting
+- Improved error handling and logging throughout the app
 
 ### v1.0.0
 - Initial release
