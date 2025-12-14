@@ -1,6 +1,6 @@
 # BTicino Door Entry for Homey
 
-A Homey app to automate BTicino devices (locks/gates) that use the BTicino Door Entry service.
+Control your BTicino Door Entry system (such as EasyKit) through Homey. This app requires the BTicino Door Entry service and cannot be used with other BTicino/Legrand systems or mobile apps.
 
 ## Features
 
@@ -15,7 +15,8 @@ A Homey app to automate BTicino devices (locks/gates) that use the BTicino Door 
 ## Requirements
 
 - Homey (SDK 3, compatibility >= 12.4.0)
-- Active BTicino Door Entry account with registered devices
+- BTicino system using the Door Entry mobile app (eg EasyKit systems)
+- Active Door Entry account with registered devices
 
 ## Pairing Flow
 

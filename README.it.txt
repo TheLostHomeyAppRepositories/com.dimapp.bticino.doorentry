@@ -1,3 +1,3 @@
-Integra perfettamente il tuo sistema BTicino Door Entry con Homey. Apri automaticamente i cancelli quando arrivi a casa, ricevi notifiche Flow quando qualcuno suona al campanello e crea potenti automazioni che collegano il tuo citofono con luci, telecamere e altri dispositivi smart.
+Questa app richiede un sistema BTicino che utilizza l'app Door Entry per mobile (come EasyKit). Controlla facilmente i tuoi cancelli e citofoni tramite Homey. Apri automaticamente i cancelli quando arrivi a casa, ricevi notifiche istantanee quando qualcuno suona il campanello e crea potenti automazioni che collegano il tuo videocitofono con luci, telecamere e altri dispositivi smart.
 
-Questa app utilizza la stessa autenticazione sicura dell'app mobile ufficiale BTicino Door Entry, garantendo che la sicurezza della tua casa rimanga intatta mentre ottieni funzionalità smart home.
+Utilizza la stessa autenticazione sicura dell'app ufficiale BTicino Door Entry, mantenendo intatta la sicurezza della tua casa.
