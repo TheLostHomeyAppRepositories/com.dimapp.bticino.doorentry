@@ -222,6 +222,16 @@ module.exports = class BticinoApp extends Homey.App {
    */
   async startSipListener() {
     try {
+      // Prevent multiple concurrent connection attempts
+      if (this._sipConnecting) {
+        this.log('SIP connection already in progress, waiting...');
+        // Wait a bit and check again
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        if (this.auth.isSipListenerConnected()) {
+          return true;
+        }
+      }
+
       // Check if listener already exists
       if (this.auth.hasSipListener()) {
         this.log('SIP Listener already exists');
@@ -232,10 +242,15 @@ module.exports = class BticinoApp extends Homey.App {
           return true;
         } else {
           this.log('SIP Listener exists but not connected - reconnecting...');
-          const listener = this.auth.getSipListener();
-          await listener.connect();
-          await listener.register();
-          return true;
+          this._sipConnecting = true;
+          try {
+            const listener = this.auth.getSipListener();
+            await listener.connect();
+            await listener.register();
+            return true;
+          } finally {
+            this._sipConnecting = false;
+          }
         }
       }
 
@@ -250,23 +265,29 @@ module.exports = class BticinoApp extends Homey.App {
 
       this.log('Creating new SIP listener...');
 
-      // Create the listener using factory method
-      const listener = this.auth.createSipListener(sipAccount, certs, {
-        debug: DEBUG,
-        keepAlive: true,
-        autoReconnect: true
-      });
+      this._sipConnecting = true;
+      try {
+        // Create the listener using factory method
+        const listener = this.auth.createSipListener(sipAccount, certs, {
+          debug: DEBUG,
+          keepAlive: true,
+          autoReconnect: true
+        });
 
-      // Connect and register
-      this.log('Starting SIP listener...');
-      await listener.connect();
-      await listener.register();
+        // Connect and register
+        this.log('Starting SIP listener...');
+        await listener.connect();
+        await listener.register();
 
-      this.log('SIP Listener started successfully');
-      return true;
+        this.log('SIP Listener started successfully');
+        return true;
+      } finally {
+        this._sipConnecting = false;
+      }
 
     } catch (e) {
       this.error('Failed to start SIP listener:', e && e.message);
+      this._sipConnecting = false;
       return false;
     }
   }

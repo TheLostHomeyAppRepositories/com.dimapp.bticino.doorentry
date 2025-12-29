@@ -14,5 +14,9 @@
   "1.1.3": {
     "en": "Dependency updates",
     "it": "Aggiornamento delle dipendenze"
+  },
+  "1.1.4": {
+    "en": "- Fixed an issue during the process to add new devices\n - Updated app icon",
+    "it": "- Sistemato un problema durante il processo per aggiungere nuovi dispositivi\n - Aggiornata l'icona dell'app"
   }
 }
