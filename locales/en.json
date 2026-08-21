@@ -11,5 +11,81 @@
 			"confirm": "Confirm"
 		},
 		"success_message": "You can now close this window."
+	},
+	"device": {
+		"account_disconnected": "BTicino account is disconnected. Please repair the device to reconnect."
+	},
+	"settings": {
+		"title": "BTicino Door Entry Settings",
+		"subtitle": "Configure your app preferences",
+		"menu": {
+			"account_title": "Account",
+			"account_desc": "Connection status and account management",
+			"debug_title": "Debug & Diagnostics",
+			"debug_desc": "Debug logging and API diagnostics"
+		},
+		"common": {
+			"back": "Back",
+			"save": "Save",
+			"saved": "Settings saved",
+			"confirm": "Confirm",
+			"cancel": "Cancel",
+			"loading": "Loading...",
+			"not_available": "N/A",
+			"error_generic": "An error occurred"
+		},
+		"account": {
+			"title": "BTicino Account",
+			"subtitle": "View your connection status or disconnect the app from BTicino cloud services.",
+			"status_card_title": "Connection Status",
+			"status_connected": "Connected",
+			"status_disconnected": "Disconnected",
+			"details_legend": "System Details",
+			"plant_id": "Plant ID",
+			"gateway_id": "Gateway ID",
+			"sip_listener": "SIP Doorbell Listener",
+			"sip_connected": "Active (listening for doorbell)",
+			"sip_disconnected": "Inactive",
+			"disconnect_btn": "Disconnect Account",
+			"confirm_disconnect": "Are you sure you want to disconnect your BTicino account? Your devices will be marked as unavailable until you repair or reconnect them.",
+			"disconnecting": "Disconnecting account...",
+			"disconnected_toast": "Account disconnected successfully",
+			"reconnect_notice_title": "Account is Disconnected",
+			"reconnect_notice_desc": "Your paired devices are currently unavailable. To reconnect and restore functionality without losing your Flows, open any of your BTicino devices in Homey and start the 'Repair' process."
+		},
+		"debug": {
+			"title": "Debug & Diagnostics",
+			"subtitle": "Manage debug logging and generate API diagnostics for troubleshooting.",
+			"legend": "Debug Settings",
+			"enable_debug": "Enable detailed debug logging",
+			"debug_description": "When enabled, the app will log detailed information about API calls, authentication, and SIP connections. This can help diagnose issues but may impact performance.",
+			"restart_note": "⚠️ Note: Changes to debug settings will take effect after restarting the app or when new connections are established."
+		},
+		"diagnostics": {
+			"legend": "API Diagnostics",
+			"description": "Fetch data from BTicino API and save responses as JSON files for troubleshooting.",
+			"fetch_plants": "Plants",
+			"fetch_modules": "Modules",
+			"fetch_sip_accounts": "SIP Accounts",
+			"available_files": "Available Files",
+			"download": "Download",
+			"delete": "Delete",
+			"fetching_plants": "Fetching plants from BTicino API...",
+			"fetching_modules": "Fetching modules from BTicino API...",
+			"fetching_sip_accounts": "Fetching SIP accounts from BTicino API...",
+			"plants_saved": "Plants data saved: {{count}} record(s)",
+			"modules_saved": "Modules data saved: {{count}} record(s)",
+			"sip_accounts_saved": "SIP accounts data saved: {{count}} record(s)",
+			"plants_saved_toast": "Plants data saved!",
+			"modules_saved_toast": "Modules data saved!",
+			"sip_accounts_saved_toast": "SIP accounts data saved!",
+			"api_error": "API error saved to file: {{error}}",
+			"failed": "Failed: {{error}}",
+			"error_deleting": "Error deleting file: {{error}}",
+			"failed_delete": "Failed to delete file",
+			"file_deleted": "File deleted",
+			"confirm_delete": "Delete \"{{filename}}\"?",
+			"settings_saved": "Saved"
+		}
 	}
 }

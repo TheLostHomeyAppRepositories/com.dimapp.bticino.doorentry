@@ -5,16 +5,126 @@ const os = require('os');
 const { BticinoAuthentication } = require('door-entry');
 
 const DEFAULT_PROXY_PORT = 3123;
-const DEBUG = false;
 
 module.exports = class BticinoApp extends Homey.App {
 
+  /**
+   * Clear all saved authentication and connection settings.
+   * @private
+   * @returns {void}
+   */
   _clearSettings() {
     this.homey.settings.unset('token');
     this.homey.settings.unset('sip_account');
     this.homey.settings.unset('certificates');
     this.homey.settings.unset('plantId');
     this.homey.settings.unset('gatewayId');
+  }
+
+  /**
+   * Mark all EasyKit devices as unavailable with a localized message.
+   * @public
+   * @async
+   * @param {string} [message] - Optional message describing why devices are unavailable.
+   * @returns {Promise<void>}
+   * @example
+   * await app.setDevicesUnavailable('Account disconnected');
+   */
+  async setDevicesUnavailable(message) {
+    try {
+      const unavailableMsg = message || this.homey.__('device.account_disconnected');
+      const driver = this.homey.drivers.getDriver('easykit');
+      if (driver) {
+        const devices = driver.getDevices();
+        this.log(`Marking ${devices.length} EasyKit device(s) as unavailable`);
+        for (const device of devices) {
+          await device.setUnavailable(unavailableMsg).catch((err) => {
+            this.error(`Failed to set device ${device.getName()} unavailable:`, err && err.message);
+          });
+        }
+      }
+    } catch (e) {
+      this.error('Error in setDevicesUnavailable:', e && e.message);
+    }
+  }
+
+  /**
+   * Mark all EasyKit devices as available.
+   * @public
+   * @async
+   * @returns {Promise<void>}
+   * @example
+   * await app.setDevicesAvailable();
+   */
+  async setDevicesAvailable() {
+    try {
+      const driver = this.homey.drivers.getDriver('easykit');
+      if (driver) {
+        const devices = driver.getDevices();
+        this.log(`Marking ${devices.length} EasyKit device(s) as available`);
+        for (const device of devices) {
+          await device.setAvailable().catch((err) => {
+            this.error(`Failed to set device ${device.getName()} available:`, err && err.message);
+          });
+        }
+      }
+    } catch (e) {
+      this.error('Error in setDevicesAvailable:', e && e.message);
+    }
+  }
+
+  /**
+   * Disconnect account: stop SIP listener, clear credentials, shutdown auth, and mark devices unavailable.
+   * @public
+   * @async
+   * @returns {Promise<{success: boolean}>}
+   * @example
+   * await app.disconnectAccount();
+   */
+  async disconnectAccount() {
+    this.log('Initiating account disconnect...');
+    try {
+      // Stop SIP listener
+      await this.stopSipListener();
+
+      // Detach handlers from current auth instance
+      this._detachSipListenerHandlers();
+      this._detachAuthHandlers();
+
+      // Shutdown existing auth instance
+      if (this.auth) {
+        await this.auth.shutdown();
+      }
+
+      // Clear saved settings
+      this._clearSettings();
+
+      // Recreate a clean auth instance for subsequent logins
+      this.auth = new BticinoAuthentication({
+        autoOpenBrowser: false,
+        debug: this._getDebugEnabled(),
+        proxyHost: this._getLocalIpAddress(),
+        proxyPort: DEFAULT_PROXY_PORT,
+        successPage: this._generateCloseWindowHtmlContent(this.homey.__('pair.success_message'), 'https://homey.app/img/heading/homey@2x.webp')
+      });
+
+      this._attachAuthHandlers(this.auth);
+      this._attachSipListenerHandlers();
+
+      // Mark all existing devices as unavailable (without deleting them)
+      await this.setDevicesUnavailable(this.homey.__('device.account_disconnected'));
+
+      this.log('Account disconnected successfully and devices marked unavailable');
+      return { success: true };
+    } catch (e) {
+      this.error('Failed to disconnect account:', e && e.message);
+      throw e;
+    }
+  }
+
+  _getDebugEnabled() {
+    const debugEnabled = this.homey.settings.get('debugEnabled');
+    return debugEnabled === true || debugEnabled === 'true';
   }
 
   _getLocalIpAddress() {
@@ -78,8 +188,33 @@ module.exports = class BticinoApp extends Homey.App {
       this.log('SIP Listener connected to server');
     };
 
-    this._onSipRegistered = () => {
+    this._onSipRegistered = async () => {
       this.log('SIP Listener registered - listening for doorbell');
+      try {
+        if (this._serviceConnectedTrigger) {
+          const userLanguage = this.homey.i18n.getLanguage();
+          const userTimezone = await this.homey.clock.getTimezone();
+          const formattedTime = new Date().toLocaleString(userLanguage, {
+            timeZone: userTimezone,
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+          });
+          await this._serviceConnectedTrigger.trigger({ timestamp: formattedTime });
+          this.log('Flow trigger fired: service_connected');
+        }
+      } catch (e) {
+        this.error('Failed to trigger service_connected flow:', e && e.message);
+      }
+    };
+
+    this._onSipKeepalive = () => {
+      if (this._getDebugEnabled()) {
+        this.log('SIP Listener keep-alive confirmed');
+      }
     };
 
     this._onSipInvite = async (callInfo) => {
@@ -133,8 +268,27 @@ module.exports = class BticinoApp extends Homey.App {
       }
     };
 
-    this._onSipDisconnected = () => {
+    this._onSipDisconnected = async () => {
       this.log('SIP Listener disconnected (will auto-reconnect if enabled)');
+      try {
+        if (this._serviceDisconnectedTrigger) {
+          const userLanguage = this.homey.i18n.getLanguage();
+          const userTimezone = await this.homey.clock.getTimezone();
+          const formattedTime = new Date().toLocaleString(userLanguage, {
+            timeZone: userTimezone,
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+          });
+          await this._serviceDisconnectedTrigger.trigger({ timestamp: formattedTime });
+          this.log('Flow trigger fired: service_disconnected');
+        }
+      } catch (e) {
+        this.error('Failed to trigger service_disconnected flow:', e && e.message);
+      }
     };
 
     this._onSipError = (err) => {
@@ -152,6 +306,7 @@ module.exports = class BticinoApp extends Homey.App {
     // Attach handlers
     this.auth.on('sip:connected', this._onSipConnected);
     this.auth.on('sip:registered', this._onSipRegistered);
+    this.auth.on('sip:keepalive', this._onSipKeepalive);
     this.auth.on('sip:invite', this._onSipInvite);
     this.auth.on('sip:disconnected', this._onSipDisconnected);
     this.auth.on('sip:error', this._onSipError);
@@ -169,6 +324,10 @@ module.exports = class BticinoApp extends Homey.App {
     if (this._onSipRegistered) {
       this.auth.off('sip:registered', this._onSipRegistered);
       this._onSipRegistered = null;
+    }
+    if (this._onSipKeepalive) {
+      this.auth.off('sip:keepalive', this._onSipKeepalive);
+      this._onSipKeepalive = null;
     }
     if (this._onSipInvite) {
       this.auth.off('sip:invite', this._onSipInvite);
@@ -269,7 +428,7 @@ module.exports = class BticinoApp extends Homey.App {
       try {
         // Create the listener using factory method
         const listener = this.auth.createSipListener(sipAccount, certs, {
-          debug: DEBUG,
+          debug: this._getDebugEnabled(),
           keepAlive: true,
           autoReconnect: true
         });
@@ -368,7 +527,7 @@ module.exports = class BticinoApp extends Homey.App {
 
     this.auth = new BticinoAuthentication({
       autoOpenBrowser: false,
-      debug: DEBUG,
+      debug: this._getDebugEnabled(),
       proxyHost: this._getLocalIpAddress(),
       proxyPort: DEFAULT_PROXY_PORT,
       successPage: this._generateCloseWindowHtmlContent(this.homey.__("pair.success_message"), 'https://homey.app/img/heading/homey@2x.webp')
@@ -376,9 +535,11 @@ module.exports = class BticinoApp extends Homey.App {
 
     this._attachAuthHandlers(this.auth);
 
-    // Register Flow trigger card
+    // Register Flow trigger cards
     this._doorbellTrigger = this.homey.flow.getTriggerCard('doorbell_rang');
-    this.log('Flow trigger card registered: doorbell_rang');
+    this._serviceConnectedTrigger = this.homey.flow.getTriggerCard('service_connected');
+    this._serviceDisconnectedTrigger = this.homey.flow.getTriggerCard('service_disconnected');
+    this.log('Flow trigger cards registered: doorbell_rang, service_connected, service_disconnected');
 
     // Attach SIP listener event handlers
     this._attachSipListenerHandlers();
@@ -396,9 +557,14 @@ module.exports = class BticinoApp extends Homey.App {
         
         // Start the listener
         await this.startSipListener();
+        await this.setDevicesAvailable();
       } catch (e) {
         this.error('Failed to authenticate/start listener on init:', e && e.message);
+        await this.setDevicesUnavailable(this.homey.__("device.account_disconnected"));
       }
+    } else {
+      this.log('Missing credentials on init - marking devices unavailable');
+      await this.setDevicesUnavailable(this.homey.__("device.account_disconnected"));
     }
   }
 

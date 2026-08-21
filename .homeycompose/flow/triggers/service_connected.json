@@ -1,0 +1,25 @@
+{
+  "id": "service_connected",
+  "title": {
+    "en": "BTicino service connected",
+    "it": "Servizio BTicino connesso"
+  },
+  "hint": {
+    "en": "Triggered when the connection to BTicino cloud service is established or restored",
+    "it": "Si attiva quando la connessione al servizio cloud BTicino viene stabilita o ripristinata"
+  },
+  "tokens": [
+    {
+      "name": "timestamp",
+      "type": "string",
+      "title": {
+        "en": "Time",
+        "it": "Ora"
+      },
+      "example": {
+        "en": "12/13/2025, 6:23:39 PM",
+        "it": "13/12/2025, 18:23:39"
+      }
+    }
+  ]
+}

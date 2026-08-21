@@ -48,5 +48,17 @@
       "id": "add_my_devices",
       "template": "add_devices"
     }
+  ],
+  "repair": [
+    {
+      "id": "bticino_login"
+    },
+    {
+      "id": "choose_plant"
+    },
+    {
+      "id": "register_device",
+      "template": "loading"
+    }
   ]
 }

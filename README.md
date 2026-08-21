@@ -1,6 +1,6 @@
-# BTicino Door Entry for Homey
+# BTicino Door Entry EasyKit for Homey
 
-Control your BTicino Door Entry system (such as EasyKit) through Homey. This app requires the BTicino Door Entry service and cannot be used with other BTicino/Legrand systems or mobile apps.
+Control your BTicino Door Entry EasyKit system through Homey. This app requires the BTicino Door Entry service and cannot be used with other BTicino/Legrand systems or mobile apps.
 
 ## Features
 
@@ -9,20 +9,22 @@ Control your BTicino Door Entry system (such as EasyKit) through Homey. This app
 - **Automatic Device Discovery**: Discover all BTicino locks/gates available on your account
 - **Secure SIP Control**: TLS-encrypted SIP communication for gate/lock control
 - **Real-Time Doorbell Notifications**: SIP listener automatically detects when someone rings the doorbell
-- **Flow Integration**: Trigger automations when the doorbell rings with timestamp tokens
+- **Flow Integration**: Trigger automations when the doorbell rings, and when service connects or disconnects (with timestamp tokens)
 - **Auto-Close Support**: Optional automatic lock closing with configurable delay
+- **Device Repair Workflow**: Easily re-authenticate and repair devices without deleting them or breaking existing Flows
+- **Modern App Settings**: Single Page Application (SPA) with live service diagnostics, debug controls, and account management
 
 ## Requirements
 
 - Homey (SDK 3, compatibility >= 12.4.0)
-- BTicino system using the Door Entry mobile app (eg EasyKit systems)
+- BTicino system using the Door Entry mobile app (e.g., EasyKit systems)
 - Active Door Entry account with registered devices
 
-## Pairing Flow
+## Pairing & Repair Flow
 
-### First-Time Setup
+### First-Time Setup (Pairing)
 
-1. In Homey, add a new **BTicino Lock** device
+1. In Homey, add a new **BTicino EasyKit** device
 2. Click **Open login page** to authenticate with your BTicino account
    - A temporary OAuth2 proxy runs on your Homey (port 3123 by default)
    - Use the same credentials as your Door Entry mobile app
@@ -34,15 +36,18 @@ Control your BTicino Door Entry system (such as EasyKit) through Homey. This app
    - Discover all available locks/gates
 6. Select the devices you want to expose in Homey and complete the wizard
 
-### Subsequent Pairing Sessions
+### Repair Flow (Reconnection)
 
-- If credentials are already cached, Homey skips login and plant selection
-- Cached data includes: authentication tokens, SIP account info, and certificates
+If your account credentials expire or you disconnected your account:
+1. Open the device settings in the Homey app and tap **Repair** (or **Maintenance**)
+2. Log in with your BTicino credentials
+3. Select your plant
+4. Homey will refresh your tokens and certificates, reconnect the SIP listener, and restore all your devices to the **Available** state without deleting your devices or breaking existing Flows!
 
 ## Device Capabilities
 
 ### Locked Capability
-- **Lock/Unlock**: Close/Opens the gate/lock via SIP
+- **Lock/Unlock**: Opens/closes the gate or lock via SIP TLS
 
 ### Auto-Close Setting
 - **Auto-Close Lock**: Enable automatic gate closing after unlock
@@ -58,81 +63,44 @@ Triggers when someone rings the doorbell. The SIP listener automatically detects
 **Tokens:**
 - `timestamp`: The time when the doorbell rang, formatted according to your Homey's language and timezone settings
 
-**Use Cases:**
-- Send notifications when someone is at the door
-- Turn on lights or camera recordings
-- Log doorbell activity
-- Automatically open the gate for expected visitors during specific times
+#### Service Connected
+Triggers when the app successfully connects and registers to the BTicino SIP cloud service.
 
-### Troubleshooting Connection Issues
+**Tokens:**
+- `timestamp`: The formatted time when the service connected
 
-If the login link is unreachable:
-1. Verify your pairing device can reach Homey's local IP on port 3123
-2. Check firewall rules on your network
-3. Ensure Homey and pairing device are on the same network
+#### Service Disconnected
+Triggers when the connection to the BTicino SIP cloud service is lost or the account is disconnected.
+
+**Tokens:**
+- `timestamp`: The formatted time when the service disconnected
+
+## App Settings
+
+The app features a modern, responsive Single Page Application (SPA) accessible under Homey Settings:
+- **Service Status**: View live SIP connection and authentication status
+- **Diagnostic Tools**: Quick status overview and debug logging toggle
+- **Account Management**: Safely disconnect your account without deleting your devices
 
 ## Security
 
 - **OAuth2 Authentication**: Industry-standard credential management via Azure AD B2C
-- **TLS Encryption**: SIP communications are encrypted with provisioned client certificates
-- **Token Caching**: Tokens are securely stored in Homey settings (encrypted by Homey's native storage)
-
-## Configuration
-
-### Device Settings
-- `autoClose` (boolean): Enable/disable auto-closing after unlock
-- `autoCloseDelay` (number): Delay in seconds before auto-closing (0-600, default: 30)
-
-## Troubleshooting
-
-### SIP Listener Not Starting
-- Ensure credentials and certificates were provisioned during pairing
-- Check Homey logs for authentication errors
-- Try re-pairing the device to refresh credentials
-
-### Doorbell Notifications Not Working
-- Verify the SIP listener is connected (check Homey logs for "SIP Listener registered")
-- Ensure the gateway ID matches your device
-- Check that your BTicino account has doorbell/intercom devices configured
-- Restart the app if the listener disconnected
-
-### Pairing Fails at Login
-- Ensure your BTicino account credentials are correct
-- Check that Homey has internet connectivity
-
-### Pairing Fails at Plant Selection
-- Ensure your BTicino account has at least one registered plant/installation
-- Check Homey logs for API errors
-- Restart pairing and try again
-
-### Gate/Lock Control Not Working
-- Verify the lock is online in the BTicino app
-- Check that SIP account registration succeeded during pairing (check Homey logs)
-- Ensure certificates are provisioned (check Homey logs)
-- Restart the device or Homey if control fails sporadically
+- **TLS Encryption**: SIP communications are encrypted with provisioned mTLS client certificates
+- **Secure Storage**: Tokens and certificates are securely stored in encrypted Homey settings
 
 ## Development
 
-### Architecture
-
-- **App** (`app.js`): Handles authentication setup, token/certificate lifecycle, and SIP listener for doorbell notifications
-- **Driver** (`drivers/lock/driver.js`): Manages pairing flow and device discovery
-- **Device** (`drivers/lock/device.js`): Controls individual locks via SIP and manages auto-close functionality
-
-### Key Components
-
-- **SIP Listener**: Persistent connection that monitors doorbell events and triggers Flow cards
-- **Authentication Handler**: Manages OAuth2 tokens and automatic token refresh
-- **Certificate Management**: Provisions and renews TLS certificates for secure SIP communication
-
-### Building & Testing
+### Building & Running
 
 ```bash
-# Install dependencies
+# Install dependencies from GitHub
 npm install
 
-# Homey CLI commands
-homey app run --r             # Run app in development
+# Run app in development mode with live streaming logs
+homey app run --r
+
+# Validate app for publication
+homey app validate --level publish
 ```
 
 ### Dependencies
@@ -147,19 +115,20 @@ GNU General Public License v3.0 - See [LICENSE](LICENSE) file for details.
 
 Contributions are welcome! Please refer to [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-## Support
-
-For issues, feature requests, or questions:
-1. Check this README and troubleshooting section
-2. Review existing GitHub issues
-3. Open a new issue with detailed logs and steps to reproduce
-
 ## Author
 
 **Simone Di Maio**  
 Email: simone.dimaio77@gmail.com
 
 ## Changelog
+
+### v1.2.0
+- Added Flow trigger cards to receive notifications on BTicino service connection status (connected / disconnected)
+- Redesigned App Settings with a modern Single Page Application (SPA) interface and toast notifications
+- Added account disconnection feature without deleting existing devices or breaking Flows
+- Added full support for device repair to reconnect without losing devices or Flows
+- Migrated driver to `easykit` and updated `door-entry` SDK to v2.0.10
+- General performance improvements and optimizations
 
 ### v1.1.1
 - Added real-time doorbell notifications via SIP listener

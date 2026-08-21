@@ -4,12 +4,88 @@
 			"title": "Accedi al tuo account BTicino",
 			"description": "Homey deve autenticarsi su BTicino-DoorEntry per rilevare i tuoi impianti.",
 			"step_open": "Apri la pagina di LogIn a BTicino usando il pulsante qui sotto.",
-            "open_link": "Apri pagina di LogIn"
+			"open_link": "Apri pagina di LogIn"
 		},
 		"choose_plant": {
 			"title": "Seleziona il tuo impianto BTicino",
 			"confirm": "Conferma"
 		},
-        "success_message": "Ora puoi chiudere questa finestra."
+		"success_message": "Ora puoi chiudere questa finestra."
+	},
+	"device": {
+		"account_disconnected": "L'account BTicino è disconnesso. Esegui il repair del dispositivo per riconnettere."
+	},
+	"settings": {
+		"title": "Impostazioni BTicino Door Entry",
+		"subtitle": "Configura le preferenze dell'app",
+		"menu": {
+			"account_title": "Account",
+			"account_desc": "Stato della connessione e gestione account",
+			"debug_title": "Debug e Diagnostica",
+			"debug_desc": "Log di debug e diagnostica API"
+		},
+		"common": {
+			"back": "Indietro",
+			"save": "Salva",
+			"saved": "Impostazioni salvate",
+			"confirm": "Conferma",
+			"cancel": "Annulla",
+			"loading": "Caricamento in corso...",
+			"not_available": "N/D",
+			"error_generic": "Si è verificato un errore"
+		},
+		"account": {
+			"title": "Account BTicino",
+			"subtitle": "Visualizza lo stato della connessione o disconnetti l'app dai servizi cloud BTicino.",
+			"status_card_title": "Stato Connessione",
+			"status_connected": "Connesso",
+			"status_disconnected": "Disconnesso",
+			"details_legend": "Dettagli Impianto",
+			"plant_id": "ID Impianto",
+			"gateway_id": "ID Gateway",
+			"sip_listener": "Listener Campanello SIP",
+			"sip_connected": "Attivo (in ascolto)",
+			"sip_disconnected": "Non attivo",
+			"disconnect_btn": "Disconnetti Account",
+			"confirm_disconnect": "Sei sicuro di voler disconnettere l'account BTicino? I tuoi dispositivi verranno contrassegnati come non disponibili finché non eseguirai la procedura di Repair.",
+			"disconnecting": "Disconnessione in corso...",
+			"disconnected_toast": "Account disconnesso con successo",
+			"reconnect_notice_title": "Account Disconnesso",
+			"reconnect_notice_desc": "I dispositivi associati sono attualmente non disponibili. Per riconnetterli e ripristinare il funzionamento senza perdere i tuoi Flow, apri uno dei dispositivi BTicino in Homey e avvia la procedura di 'Ripara' (Repair)."
+		},
+		"debug": {
+			"title": "Debug e Diagnostica",
+			"subtitle": "Gestisci i log di debug ed esegui la diagnostica delle API per la risoluzione dei problemi.",
+			"legend": "Impostazioni Debug",
+			"enable_debug": "Abilita log dettagliati di debug",
+			"debug_description": "Quando abilitato, l'app registrerà informazioni dettagliate sulle chiamate API, autenticazione e connessioni SIP. Questo può aiutare a diagnosticare problemi ma potrebbe influenzare le prestazioni.",
+			"restart_note": "⚠️ Nota: Le modifiche alle impostazioni di debug avranno effetto dopo il riavvio dell'app o quando verranno stabilite nuove connessioni."
+		},
+		"diagnostics": {
+			"legend": "Diagnostica API",
+			"description": "Recupera dati dall'API BTicino e salva le risposte come file JSON per la risoluzione dei problemi.",
+			"fetch_plants": "Impianti",
+			"fetch_modules": "Moduli",
+			"fetch_sip_accounts": "Account SIP",
+			"available_files": "File Disponibili",
+			"download": "Scarica",
+			"delete": "Elimina",
+			"fetching_plants": "Recupero impianti dall'API BTicino...",
+			"fetching_modules": "Recupero moduli dall'API BTicino...",
+			"fetching_sip_accounts": "Recupero account SIP dall'API BTicino...",
+			"plants_saved": "Dati impianti salvati: {{count}} record",
+			"modules_saved": "Dati moduli salvati: {{count}} record",
+			"sip_accounts_saved": "Dati account SIP salvati: {{count}} record",
+			"plants_saved_toast": "Dati impianti salvati!",
+			"modules_saved_toast": "Dati moduli salvati!",
+			"sip_accounts_saved_toast": "Dati account SIP salvati!",
+			"api_error": "Errore API salvato nel file: {{error}}",
+			"failed": "Errore: {{error}}",
+			"error_deleting": "Errore durante l'eliminazione: {{error}}",
+			"failed_delete": "Impossibile eliminare il file",
+			"file_deleted": "File eliminato",
+			"confirm_delete": "Eliminare \"{{filename}}\"?",
+			"settings_saved": "Salvato"
+		}
 	}
 }

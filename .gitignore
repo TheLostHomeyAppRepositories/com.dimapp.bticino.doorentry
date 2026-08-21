@@ -1,8 +1,12 @@
 /env.json
 /node_modules/
 /.homeybuild/
+/log/
 bck/
 .homeyignore
 *.bat
 *.code-workspace
 *.ps1
+/AI_PROJECT_HANDBOOK.md
+/dev-scripts/
+.agents/

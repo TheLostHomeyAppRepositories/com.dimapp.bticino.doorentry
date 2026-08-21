@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BTicino Door Entry Settings</title>
+  <!-- The '/homey.js' script must be included in your settings view to work -->
+  <script type="text/javascript" src="/homey.js" data-origin="settings"></script>
+  <style>
+    :root {
+      --brand-color: #f36f21;
+      --brand-color-hover: #e05e12;
+      --brand-color-light: rgba(243, 111, 33, 0.1);
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: 10px 15px 30px 15px;
+      box-sizing: border-box;
+    }
+
+    .homey-button-primary-full {
+      width: 100%;
+    }
+
+    /* Views */
+    .view {
+      display: none;
+    }
+
+    .view.is-active {
+      display: block;
+    }
+
+    /* Subtitle style matching GeminiAI */
+    .subtitle {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.5;
+      margin-top: 6px;
+      margin-bottom: 20px;
+    }
+
+    /* Main Menu list items */
+    .menu-list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 15px;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      padding: 16px;
+      background-color: rgba(255, 255, 255, 0.6);
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s, border-color 0.2s;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .menu-item:hover {
+      background-color: rgba(0, 0, 0, 0.03);
+      border-color: var(--brand-color);
+    }
+
+    .menu-item:active {
+      transform: scale(0.98);
+    }
+
+    .menu-item-content {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .menu-item-icon {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--brand-color);
+      flex-shrink: 0;
+    }
+
+    .menu-item-text {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .menu-item-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .menu-item-subtitle {
+      font-size: 13px;
+      color: #666;
+    }
+
+    .menu-item-arrow {
+      color: #999;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    /* Back Item Style */
+    .back-item {
+      margin-bottom: 20px;
+      border-color: rgba(0, 0, 0, 0.06);
+      background-color: #fff;
+      justify-content: flex-start;
+      gap: 10px;
+      padding: 12px 16px;
+    }
+
+    .back-item .menu-item-title {
+      color: var(--brand-color);
+    }
+
+    .back-item .menu-item-arrow {
+      color: var(--brand-color);
+    }
+
+    /* Info Cards & Badges */
+    .status-card {
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      padding: 16px;
+      background-color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 20px;
+    }
+
+    .status-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .status-header-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #333;
+      margin: 0;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+
+    .status-badge.connected {
+      background-color: rgba(40, 167, 69, 0.15);
+      color: #28a745;
+    }
+
+    .status-badge.disconnected {
+      background-color: rgba(220, 53, 69, 0.15);
+      color: #dc3545;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      font-size: 13px;
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+    }
+
+    .info-label {
+      color: #666;
+    }
+
+    .info-value {
+      font-weight: 500;
+      color: #333;
+      font-family: monospace;
+    }
+
+    .notice-box {
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .notice-box.warning {
+      background-color: #fff3cd;
+      border: 1px solid #ffeeba;
+      color: #856404;
+    }
+
+    .notice-box.info {
+      background-color: var(--brand-color-light);
+      border: 1px solid rgba(243, 111, 33, 0.3);
+      color: #9c4106;
+    }
+
+    .notice-box h4 {
+      margin: 0 0 6px 0;
+      font-size: 14px;
+    }
+
+    /* Diagnostics files list */
+    .diagnostic-file-item {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #fff;
+    }
+
+    .diagnostic-file-item:last-child {
+      border-bottom: none;
+    }
+
+    .diagnostic-file-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .diagnostic-file-name {
+      font-weight: 500;
+      font-size: 13px;
+      color: #333;
+    }
+
+    .diagnostic-file-meta {
+      font-size: 11px;
+      color: #888;
+    }
+
+    .diagnostic-file-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Loading Spinner */
+    .loading-spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top-color: var(--brand-color);
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+      margin-left: 6px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 20px;
+      background-color: #28a745;
+      color: white;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      z-index: 1000;
+      text-align: center;
+      max-width: 90%;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+
+    .toast.success {
+      background-color: #28a745;
+    }
+
+    .toast.error {
+      background-color: #dc3545;
+    }
+
+    .toast.warning {
+      background-color: #ffc107;
+      color: #856404;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="content">
+
+    <!-- View 0: Main Menu -->
+    <div id="view-menu" class="view is-active">
+      <form class="homey-form">
+        <fieldset class="homey-form-fieldset">
+          <div class="menu-list-container">
+
+            <!-- Menu Item 1: Account -->
+            <div id="nav_account" class="menu-item" role="button" tabindex="0">
+              <div class="menu-item-content">
+                <div class="menu-item-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                </div>
+                <div class="menu-item-text">
+                  <span class="menu-item-title" data-i18n="settings.menu.account_title"></span>
+                  <span class="menu-item-subtitle" data-i18n="settings.menu.account_desc"></span>
+                </div>
+              </div>
+              <div class="menu-item-arrow">›</div>
+            </div>
+
+            <!-- Menu Item 2: Debug & Diagnostics -->
+            <div id="nav_debug" class="menu-item" role="button" tabindex="0">
+              <div class="menu-item-content">
+                <div class="menu-item-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path
+                      d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                    </path>
+                  </svg>
+                </div>
+                <div class="menu-item-text">
+                  <span class="menu-item-title" data-i18n="settings.menu.debug_title"></span>
+                  <span class="menu-item-subtitle" data-i18n="settings.menu.debug_desc"></span>
+                </div>
+              </div>
+              <div class="menu-item-arrow">›</div>
+            </div>
+
+          </div>
+        </fieldset>
+      </form>
+    </div>
+
+    <!-- View 1: Account -->
+    <div id="view-account" class="view">
+      <div class="menu-item back-item back-btn" role="button" tabindex="0">
+        <div class="menu-item-arrow">‹</div>
+        <div class="menu-item-text">
+          <span class="menu-item-title" data-i18n="settings.common.back"></span>
+        </div>
+      </div>
+
+      <header class="homey-header">
+        <h1 class="homey-title" data-i18n="settings.account.title"></h1>
+        <p class="subtitle" data-i18n="settings.account.subtitle"></p>
+      </header>
+
+      <form class="homey-form">
+        <fieldset class="homey-form-fieldset">
+
+          <!-- Connection Status Card -->
+          <div class="status-card">
+            <div class="status-header">
+              <span class="status-header-title" data-i18n="settings.account.status_card_title"></span>
+              <span id="account-status-badge" class="status-badge disconnected"
+                data-i18n="settings.account.status_disconnected"></span>
+            </div>
+
+            <div id="account-details-section" style="display: none;">
+              <div class="info-row">
+                <span class="info-label" data-i18n="settings.account.plant_id"></span>
+                <span id="account-plant-id" class="info-value">-</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label" data-i18n="settings.account.gateway_id"></span>
+                <span id="account-gateway-id" class="info-value">-</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label" data-i18n="settings.account.sip_listener"></span>
+                <span id="account-sip-status" class="info-value">-</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Disconnect Button (shown when connected) -->
+          <div id="disconnect-container" class="homey-form-group" style="margin-top: 20px; display: none;">
+            <button id="btn-disconnect" type="button" class="homey-button-danger-shadow homey-button-primary-full">
+              <span data-i18n="settings.account.disconnect_btn"></span>
+              <span id="disconnect-spinner" class="loading-spinner" style="display: none;"></span>
+            </button>
+          </div>
+
+          <!-- Reconnect / Repair Notice (shown when disconnected) -->
+          <div id="reconnect-notice" class="notice-box info" style="display: none;">
+            <h4 data-i18n="settings.account.reconnect_notice_title"></h4>
+            <span data-i18n="settings.account.reconnect_notice_desc"></span>
+          </div>
+
+        </fieldset>
+      </form>
+    </div>
+
+    <!-- View 2: Debug & Diagnostics -->
+    <div id="view-debug" class="view">
+      <div class="menu-item back-item back-btn" role="button" tabindex="0">
+        <div class="menu-item-arrow">‹</div>
+        <div class="menu-item-text">
+          <span class="menu-item-title" data-i18n="settings.common.back"></span>
+        </div>
+      </div>
+
+      <header class="homey-header">
+        <h1 class="homey-title" data-i18n="settings.debug.title"></h1>
+        <p class="subtitle" data-i18n="settings.debug.subtitle"></p>
+      </header>
+
+      <form class="homey-form">
+
+        <!-- Section 1: Debug Logging -->
+        <fieldset class="homey-form-fieldset">
+          <legend class="homey-form-legend" data-i18n="settings.debug.legend"></legend>
+
+          <div class="homey-form-group">
+            <fieldset class="homey-form-checkbox-set">
+              <label class="homey-form-checkbox">
+                <input class="homey-form-checkbox-input" type="checkbox" id="debug-enabled" name="debug-enabled" />
+                <span class="homey-form-checkbox-checkmark"></span>
+                <span class="homey-form-checkbox-text" data-i18n="settings.debug.enable_debug"></span>
+              </label>
+            </fieldset>
+            <p style="margin-top: 8px; font-size: 13px; color: #666; line-height: 1.5;"
+              data-i18n="settings.debug.debug_description"></p>
+
+            <div class="notice-box warning" style="margin-top: 12px;">
+              <span data-i18n="settings.debug.restart_note"></span>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Section 2: API Diagnostics -->
+        <fieldset class="homey-form-fieldset" style="margin-top: 30px;">
+          <legend class="homey-form-legend" data-i18n="settings.diagnostics.legend"></legend>
+
+          <div class="homey-form-group">
+            <p style="margin-bottom: 16px; font-size: 13px; color: #666; line-height: 1.5;"
+              data-i18n="settings.diagnostics.description"></p>
+
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px;">
+              <button type="button" id="fetch-plants" class="homey-button-secondary-shadow">
+                <span data-i18n="settings.diagnostics.fetch_plants"></span>
+                <span id="spinner-plants" class="loading-spinner" style="display: none;"></span>
+              </button>
+              <button type="button" id="fetch-modules" class="homey-button-secondary-shadow">
+                <span data-i18n="settings.diagnostics.fetch_modules"></span>
+                <span id="spinner-modules" class="loading-spinner" style="display: none;"></span>
+              </button>
+              <button type="button" id="fetch-sip-accounts" class="homey-button-secondary-shadow">
+                <span data-i18n="settings.diagnostics.fetch_sip_accounts"></span>
+                <span id="spinner-sip" class="loading-spinner" style="display: none;"></span>
+              </button>
+            </div>
+
+            <!-- Diagnostics Files List -->
+            <div id="diagnostics-files" style="margin-top: 16px; display: none;">
+              <h4 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 600;"
+                data-i18n="settings.diagnostics.available_files"></h4>
+              <div id="files-list"
+                style="max-height: 280px; overflow-y: auto; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px;">
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
+      </form>
+    </div>
+
+  </div>
+
+  <!-- Toast notification -->
+  <div id="toast" class="toast"></div>
+
+  <script type="text/javascript">
+    /**
+     * onHomeyReady is called when the Homey environment is loaded and ready.
+     * @param {Object} Homey - Homey Settings API instance
+     */
+    function onHomeyReady(Homey) {
+      Homey.ready();
+
+      // UI View Elements
+      const viewMenu = document.getElementById('view-menu');
+      const viewAccount = document.getElementById('view-account');
+      const viewDebug = document.getElementById('view-debug');
+      const views = [viewMenu, viewAccount, viewDebug];
+
+      /**
+       * Switch between SPA views.
+       * @private
+       * @param {HTMLElement} targetView - The view element to activate
+       */
+      function _showView(targetView) {
+        views.forEach(v => {
+          if (v) v.classList.remove('is-active');
+        });
+        if (targetView) {
+          targetView.classList.add('is-active');
+        }
+        window.scrollTo(0, 0);
+      }
+
+      // Navigation Handlers
+      document.getElementById('nav_account').addEventListener('click', function () {
+        _showView(viewAccount);
+        _loadAccountStatus();
+      });
+
+      document.getElementById('nav_debug').addEventListener('click', function () {
+        _showView(viewDebug);
+        _loadDebugSettings();
+        _loadFilesList();
+      });
+
+      // Back buttons handler
+      document.querySelectorAll('.back-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+          _showView(viewMenu);
+        });
+      });
+
+      /**
+       * Show a toast notification with message and style type.
+       * @private
+       * @param {string} message - Message text
+       * @param {string} [type='success'] - Toast style type: 'success', 'error', 'warning'
+       */
+      function _showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.classList.remove('success', 'error', 'warning');
+        toast.classList.add(type);
+        toast.classList.add('show');
+
+        setTimeout(() => {
+          toast.classList.remove('show');
+        }, 3000);
+      }
+
+      // ============================================================
+      // ACCOUNT STATUS & DISCONNECTION
+      // ============================================================
+      const accountStatusBadge = document.getElementById('account-status-badge');
+      const accountDetailsSection = document.getElementById('account-details-section');
+      const accountPlantId = document.getElementById('account-plant-id');
+      const accountGatewayId = document.getElementById('account-gateway-id');
+      const accountSipStatus = document.getElementById('account-sip-status');
+      const disconnectContainer = document.getElementById('disconnect-container');
+      const reconnectNotice = document.getElementById('reconnect-notice');
+      const btnDisconnect = document.getElementById('btn-disconnect');
+      const disconnectSpinner = document.getElementById('disconnect-spinner');
+
+      /**
+       * Load current account status from the Homey API.
+       * @private
+       */
+      function _loadAccountStatus() {
+        Homey.api('GET', '/account/status', null, function (err, status) {
+          if (err) {
+            console.error('Error fetching account status:', err);
+            accountStatusBadge.className = 'status-badge disconnected';
+            accountStatusBadge.textContent = Homey.__('settings.account.status_disconnected');
+            accountDetailsSection.style.display = 'none';
+            disconnectContainer.style.display = 'none';
+            reconnectNotice.style.display = 'block';
+            return;
+          }
+
+          if (status && status.connected) {
+            accountStatusBadge.className = 'status-badge connected';
+            accountStatusBadge.textContent = Homey.__('settings.account.status_connected');
+
+            accountPlantId.textContent = status.plantId || Homey.__('settings.common.not_available');
+            accountGatewayId.textContent = status.gatewayId || Homey.__('settings.common.not_available');
+
+            if (status.sipConnected) {
+              accountSipStatus.textContent = Homey.__('settings.account.sip_connected');
+              accountSipStatus.style.color = '#28a745';
+            } else {
+              accountSipStatus.textContent = Homey.__('settings.account.sip_disconnected');
+              accountSipStatus.style.color = '#888';
+            }
+
+            accountDetailsSection.style.display = 'block';
+            disconnectContainer.style.display = 'block';
+            reconnectNotice.style.display = 'none';
+          } else {
+            accountStatusBadge.className = 'status-badge disconnected';
+            accountStatusBadge.textContent = Homey.__('settings.account.status_disconnected');
+            accountDetailsSection.style.display = 'none';
+            disconnectContainer.style.display = 'none';
+            reconnectNotice.style.display = 'block';
+          }
+        });
+      }
+
+      // Handle Disconnect Button
+      btnDisconnect.addEventListener('click', function () {
+        Homey.confirm(Homey.__('settings.account.confirm_disconnect'), 'warning', function (err, confirmed) {
+          if (err || !confirmed) return;
+
+          btnDisconnect.disabled = true;
+          disconnectSpinner.style.display = 'inline-block';
+          _showToast(Homey.__('settings.account.disconnecting'), 'warning');
+
+          Homey.api('POST', '/account/disconnect', null, function (apiErr, res) {
+            btnDisconnect.disabled = false;
+            disconnectSpinner.style.display = 'none';
+
+            if (apiErr || !res || !res.success) {
+              _showToast(Homey.__('settings.common.error_generic') + ': ' + (apiErr || res?.error), 'error');
+              return;
+            }
+
+            _showToast(Homey.__('settings.account.disconnected_toast'), 'success');
+            _loadAccountStatus();
+          });
+        });
+      });
+
+      // ============================================================
+      // DEBUG SETTINGS
+      // ============================================================
+      const debugCheckbox = document.getElementById('debug-enabled');
+
+      /**
+       * Load debug logging settings from Homey storage.
+       * @private
+       */
+      function _loadDebugSettings() {
+        Homey.get('debugEnabled', function (err, value) {
+          if (err) {
+            console.error('Error loading debugEnabled:', err);
+            debugCheckbox.checked = false;
+            return;
+          }
+          debugCheckbox.checked = (value === true || value === 'true');
+        });
+      }
+
+      // Auto-save on debug checkbox change
+      debugCheckbox.addEventListener('change', function () {
+        const isDebugEnabled = debugCheckbox.checked;
+        Homey.set('debugEnabled', isDebugEnabled, function (err) {
+          if (err) {
+            console.error('Failed to save debugEnabled:', err);
+            _showToast(Homey.__('settings.common.error_generic'), 'error');
+            return;
+          }
+          _showToast(Homey.__('settings.common.saved'), 'success');
+        });
+      });
+
+      // ============================================================
+      // DIAGNOSTICS API
+      // ============================================================
+      const fetchPlantsBtn = document.getElementById('fetch-plants');
+      const fetchModulesBtn = document.getElementById('fetch-modules');
+      const fetchSipAccountsBtn = document.getElementById('fetch-sip-accounts');
+      const spinnerPlants = document.getElementById('spinner-plants');
+      const spinnerModules = document.getElementById('spinner-modules');
+      const spinnerSip = document.getElementById('spinner-sip');
+      const diagnosticsFilesDiv = document.getElementById('diagnostics-files');
+      const filesList = document.getElementById('files-list');
+
+      /**
+       * Load and render the list of diagnostic JSON files.
+       * @private
+       */
+      function _loadFilesList() {
+        Homey.api('GET', '/diagnostic/files', null, function (err, result) {
+          if (err) {
+            console.error('Failed to load files:', err);
+            return;
+          }
+
+          if (result && result.success && Array.isArray(result.files) && result.files.length > 0) {
+            diagnosticsFilesDiv.style.display = 'block';
+
+            let html = '';
+            result.files.forEach(function (file) {
+              const date = new Date(file.created).toLocaleString();
+              const sizeKB = (file.size / 1024).toFixed(2);
+
+              html += '<div class="diagnostic-file-item" data-filename="' + file.filename + '">';
+              html += '  <div class="diagnostic-file-info">';
+              html += '    <span class="diagnostic-file-name">' + file.filename + '</span>';
+              html += '    <span class="diagnostic-file-meta">' + date + ' • ' + sizeKB + ' KB</span>';
+              html += '  </div>';
+              html += '  <div class="diagnostic-file-actions">';
+              html += '    <button type="button" class="download-file homey-button-secondary-small" data-url="' + file.url + '">' + Homey.__('settings.diagnostics.download') + '</button>';
+              html += '    <button type="button" class="delete-file homey-button-danger-small" data-filename="' + file.filename + '">' + Homey.__('settings.diagnostics.delete') + '</button>';
+              html += '  </div>';
+              html += '</div>';
+            });
+
+            filesList.innerHTML = html;
+          } else {
+            diagnosticsFilesDiv.style.display = 'none';
+          }
+        });
+      }
+
+      /**
+       * Delete a diagnostic file with user confirmation.
+       * @private
+       * @param {string} filename - File to delete
+       * @param {HTMLElement} button - Delete button element
+       */
+      function _deleteFile(filename, button) {
+        const confirmMsg = Homey.__('settings.diagnostics.confirm_delete').replace('{{filename}}', filename);
+        Homey.confirm(confirmMsg, 'warning', function (err, confirmed) {
+          if (err || !confirmed) return;
+
+          button.disabled = true;
+          Homey.api('DELETE', '/diagnostic/file/' + encodeURIComponent(filename), null, function (deleteErr, result) {
+            button.disabled = false;
+            if (deleteErr || !result?.success) {
+              _showToast(result?.error || Homey.__('settings.diagnostics.failed_delete'), 'error');
+              return;
+            }
+            _showToast(Homey.__('settings.diagnostics.file_deleted'), 'success');
+            _loadFilesList();
+          });
+        });
+      }
+
+      // Fetch Plants Diagnostic
+      fetchPlantsBtn.addEventListener('click', function () {
+        fetchPlantsBtn.disabled = true;
+        spinnerPlants.style.display = 'inline-block';
+        _showToast(Homey.__('settings.diagnostics.fetching_plants'), 'warning');
+
+        Homey.api('GET', '/diagnostic/plants', null, function (err, result) {
+          fetchPlantsBtn.disabled = false;
+          spinnerPlants.style.display = 'none';
+
+          if (err || !result?.success) {
+            _showToast(Homey.__('settings.diagnostics.failed').replace('{{error}}', err?.message || result?.error), 'error');
+          } else {
+            _showToast(Homey.__('settings.diagnostics.plants_saved_toast'), 'success');
+          }
+          _loadFilesList();
+        });
+      });
+
+      // Fetch Modules Diagnostic
+      fetchModulesBtn.addEventListener('click', function () {
+        fetchModulesBtn.disabled = true;
+        spinnerModules.style.display = 'inline-block';
+        _showToast(Homey.__('settings.diagnostics.fetching_modules'), 'warning');
+
+        Homey.api('GET', '/diagnostic/modules', null, function (err, result) {
+          fetchModulesBtn.disabled = false;
+          spinnerModules.style.display = 'none';
+
+          if (err || !result?.success) {
+            _showToast(Homey.__('settings.diagnostics.failed').replace('{{error}}', err?.message || result?.error), 'error');
+          } else {
+            _showToast(Homey.__('settings.diagnostics.modules_saved_toast'), 'success');
+          }
+          _loadFilesList();
+        });
+      });
+
+      // Fetch SIP Accounts Diagnostic
+      fetchSipAccountsBtn.addEventListener('click', function () {
+        fetchSipAccountsBtn.disabled = true;
+        spinnerSip.style.display = 'inline-block';
+        _showToast(Homey.__('settings.diagnostics.fetching_sip_accounts'), 'warning');
+
+        Homey.api('GET', '/diagnostic/sip-accounts', null, function (err, result) {
+          fetchSipAccountsBtn.disabled = false;
+          spinnerSip.style.display = 'none';
+
+          if (err || !result?.success) {
+            _showToast(Homey.__('settings.diagnostics.failed').replace('{{error}}', err?.message || result?.error), 'error');
+          } else {
+            _showToast(Homey.__('settings.diagnostics.sip_accounts_saved_toast'), 'success');
+          }
+          _loadFilesList();
+        });
+      });
+
+      // File actions delegation (Download & Delete)
+      filesList.addEventListener('click', function (e) {
+        const downloadBtn = e.target.closest('.download-file');
+        const deleteBtn = e.target.closest('.delete-file');
+
+        if (downloadBtn) {
+          const url = downloadBtn.getAttribute('data-url');
+          Homey.openURL(url);
+        } else if (deleteBtn) {
+          const filename = deleteBtn.getAttribute('data-filename');
+          _deleteFile(filename, deleteBtn);
+        }
+      });
+    }
+  </script>
+</body>
+
+</html>

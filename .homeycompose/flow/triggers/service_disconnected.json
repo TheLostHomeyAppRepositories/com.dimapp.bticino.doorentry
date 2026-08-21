@@ -1,0 +1,25 @@
+{
+  "id": "service_disconnected",
+  "title": {
+    "en": "BTicino service disconnected",
+    "it": "Servizio BTicino disconnesso"
+  },
+  "hint": {
+    "en": "Triggered when the connection to BTicino cloud service is lost",
+    "it": "Si attiva quando la connessione al servizio cloud BTicino viene persa"
+  },
+  "tokens": [
+    {
+      "name": "timestamp",
+      "type": "string",
+      "title": {
+        "en": "Time",
+        "it": "Ora"
+      },
+      "example": {
+        "en": "12/13/2025, 6:23:39 PM",
+        "it": "13/12/2025, 18:23:39"
+      }
+    }
+  ]
+}

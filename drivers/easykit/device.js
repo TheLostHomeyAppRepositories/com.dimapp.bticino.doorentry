@@ -3,13 +3,61 @@
 const Homey = require('homey');
 const { openGate } = require('door-entry');
 
+/**
+ * BticinoGateDevice
+ * Represents an EasyKit lock / gate device in Homey.
+ * Provides the 'locked' capability with auto-close timer support and SIP actuation.
+ * 
+ * @class BticinoGateDevice
+ * @extends {Homey.Device}
+ */
 module.exports = class BticinoGateDevice extends Homey.Device {
 
+  /**
+   * Check if all required credentials and settings are present.
+   * @private
+   * @returns {boolean} True if credentials are fully configured
+   */
+  _hasRequiredCredentials() {
+    const token = this.homey.settings.get('token');
+    const sipAccount = this.homey.settings.get('sip_account');
+    const certs = this.homey.settings.get('certificates');
+    const plantId = this.homey.settings.get('plantId');
+
+    if (!token || !sipAccount || !certs || !plantId) {
+      return false;
+    }
+
+    if (!certs.cert || !certs.key) {
+      return false;
+    }
+
+    if (!sipAccount.sipUri || !sipAccount.sipPassword) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Initialize the device, register capability listeners and ensure SIP listener is active.
+   * @public
+   * @async
+   * @returns {Promise<void>}
+   */
   async onInit() {
     this.log('BTicino gate device ready:', this.getName());
 
+    // Check account status and set initial availability
+    if (!this._hasRequiredCredentials()) {
+      this.log('Device credentials missing, marking device as unavailable');
+      await this.setUnavailable(this.homey.__('device.account_disconnected')).catch(this.error);
+    } else {
+      await this.setAvailable().catch(this.error);
+    }
+
     // Initialize the 'locked' capability to true on device init
-    this.setCapabilityValue('locked', true).catch(this.error);
+    await this.setCapabilityValue('locked', true).catch(this.error);
 
     // Register capability listener for 'locked' - when user toggles the lock
     // we use it as a trigger to open the gate via SIP.
@@ -18,18 +66,23 @@ module.exports = class BticinoGateDevice extends Homey.Device {
 
       // Only trigger openGate when locked is set to false (unlock/open)
       try {
+        if (!this._hasRequiredCredentials()) {
+          await this.setUnavailable(this.homey.__('device.account_disconnected')).catch(this.error);
+          throw new Error('Account disconnected or missing credentials');
+        }
+
         const gateId = (this.getData && this.getData().id) ? this.getData().id : this.getId();
         const plantId = this.homey.settings.get('plantId');
         const certs = this.homey.settings.get('certificates');
         const sipAccount = this.homey.settings.get('sip_account');
 
         if (!gateId) throw new Error('Missing gateId for this device');
-        if (!plantId) throw new Error('Missing plantId in settings');
-        if (!certs || !certs.cert || !certs.key) throw new Error('Missing certificates in settings');
-        if (!sipAccount) throw new Error('Missing sip_account in settings');
+
+        // Get debug setting from app
+        const debugEnabled = this.homey.settings.get('debugEnabled') === true;
 
         this.log('Calling openGate for gateId=', gateId, 'plantId=', plantId);
-        await openGate(gateId, plantId, certs.cert, certs.key, sipAccount, { debug: false });
+        await openGate(gateId, plantId, certs.cert, certs.key, sipAccount, { debug: debugEnabled });
         this.log('openGate completed successfully');
 
         // Check autoClose setting and schedule capability reset if enabled
@@ -68,6 +121,9 @@ module.exports = class BticinoGateDevice extends Homey.Device {
    * Ensure the SIP listener is started.
    * This is called on device init and onAdded to make sure
    * the listener is running when at least one device exists.
+   * @private
+   * @async
+   * @returns {Promise<void>}
    */
   async _ensureSipListenerStarted() {
     try {
@@ -75,6 +131,12 @@ module.exports = class BticinoGateDevice extends Homey.Device {
       
       if (!app || !app.auth) {
         this.log('App or auth not ready yet');
+        return;
+      }
+
+      // Check if credentials are present
+      if (!this._hasRequiredCredentials()) {
+        this.log('Missing credentials for SIP listener');
         return;
       }
 
@@ -91,7 +153,7 @@ module.exports = class BticinoGateDevice extends Homey.Device {
       if (started) {
         this.log('SIP Listener confirmed running');
       } else {
-        this.log('SIP Listener could not be started (missing credentials?)');
+        this.log('SIP Listener could not be started');
       }
 
     } catch (e) {
@@ -101,30 +163,39 @@ module.exports = class BticinoGateDevice extends Homey.Device {
 
   /**
    * onAdded is called when the user adds the device, called just after pairing.
+   * @public
+   * @async
+   * @returns {Promise<void>}
    */
   async onAdded() {
     this.log('BTicino gate device has been added:', this.getName());
-    
-    // Start the SIP listener now that device is added and credentials should be available
+    await this.setAvailable().catch(this.error);
     await this._ensureSipListenerStarted();
   }
 
   /**
    * onSettings is called when the user updates the device's settings.
+   * @public
+   * @async
+   * @param {Object} context - Settings context
+   * @param {Object} context.oldSettings - Previous settings values
+   * @param {Object} context.newSettings - Updated settings values
+   * @param {string[]} context.changedKeys - List of keys that changed
+   * @returns {Promise<void>}
    */
   async onSettings({ oldSettings, newSettings, changedKeys }) {
     this.log('BTicino gate device settings changed:', changedKeys);
-
-    // Try to start SIP listener if not already running
     await this._ensureSipListenerStarted();
   }
 
   /**
-   * onDeleted is called when the user deleted the device.
+   * onDeleted is called when the user deletes the device.
+   * @public
+   * @async
+   * @returns {Promise<void>}
    */
   async onDeleted() {
     this.log('Device deleted, cleaning up timers');
-    // Clean up any pending auto-close timeout
     if (this._autoCloseTimeout) {
       clearTimeout(this._autoCloseTimeout);
       this._autoCloseTimeout = null;

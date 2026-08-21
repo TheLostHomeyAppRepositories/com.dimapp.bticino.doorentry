@@ -18,5 +18,29 @@
   "1.1.4": {
     "en": "- Fixed an issue during the process to add new devices\n - Updated app icon",
     "it": "- Sistemato un problema durante il processo per aggiungere nuovi dispositivi\n - Aggiornata l'icona dell'app"
+  },
+  "1.1.5": {
+    "en": "Improved logging in debug mode",
+    "it": "Migliorato il logging in modalità debug"
+  },
+  "1.1.6": {
+    "en": "Added in app settings the ability to enable/disable detailed debug logging",
+    "it": "Aggiunta nelle impostazioni dell'app la possibilità di abilitare/disabilitare il logging dettagliato in debug"
+  },
+  "1.1.7": {
+    "en": "Added new debug features in app settings",
+    "it": "Aggiunte nuove funzionalità per il debug nelle impostazioni dell'app"
+  },
+  "1.1.8": {
+    "en": "(i) Fixed an issue during the process to add new devices\n (ii) Updated app icon\n (iii) Added app settings with debug features",
+    "it": "(i) Sistemato un problema durante il processo per aggiungere nuovi dispositivi\n (ii) Aggiornata l'icona dell'app\n (iii) Aggiunte le impostazioni dell'app con alcune funzionalità di debug"
+  },
+  "1.1.9": {
+    "en": "(i) Fixed an issue during the process to add new devices that did not load the list of devices associated with the account\n (ii) Updated app name and icon\n (iii) Added app settings with new debug features",
+    "it": "(i) Sistemato un problema durante il processo per aggiungere nuovi dispositivi che non faceva caricare la lista dei dispositivi associati all'account\n (ii) Aggiornato il nome e l'icona dell'app\n (iii) Aggiunte le impostazioni dell'app con nuove funzionalità di debug"
+  },
+  "1.2.0": {
+    "en": "(i) Added Flow trigger cards to receive notifications on BTicino service connection status (connected / disconnected)\n (ii) Redesigned App Settings with a cleaner and simpler interface\n (iii) Added the ability to disconnect and manage your account\n (iv) Added support for device repair to reconnect without losing devices or Flows\n (v) General improvements and optimizations",
+    "it": "(i) Aggiunti i Flow card per ricevere notifiche sullo stato di connessione al servizio BTicino (connesso / disconnesso)\n (ii) Riprogettate le impostazioni dell'app con una nuova interfaccia più semplice e chiara\n (iii) Aggiunta la possibilità di disconnettere e gestire il proprio account\n (iv) Aggiunto il supporto al Ripara (Repair) per riconnettersi senza perdere dispositivi o Flow\n (v) Miglioramenti generali e ottimizzazioni"
   }
 }

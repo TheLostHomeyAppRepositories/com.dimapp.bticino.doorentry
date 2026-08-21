@@ -195,8 +195,16 @@ module.exports = class BticinoLockDriver extends Homey.Driver {
           const plants = await api.getPlants();
           fetchedPlants = plants;
 
+          // 🔍 Log dettagliato risposta API
+          this.log('📊 API getPlants() response details:');
+          this.log('  - Type:', typeof plants);
+          this.log('  - Is Array:', Array.isArray(plants));
+          this.log('  - Length:', Array.isArray(plants) ? plants.length : 'N/A');
+          this.log('  - Raw response (first 500 chars):', JSON.stringify(plants).substring(0, 500));
+
           if (!Array.isArray(plants) || plants.length === 0) {
-            this.log('ℹ️  No plants returned from the API.');
+            this.log('⚠️  No plants returned from the API (empty array or null)');
+            this.log('  - Full response:', JSON.stringify(plants));
             return [];
           } else {
             this.log('✅ List of plants found:');
@@ -299,6 +307,118 @@ module.exports = class BticinoLockDriver extends Homey.Driver {
       } catch (e) {
         this.error('❌ list_devices failed:', e && e.message ? e.message : e);
         return [];
+      }
+    });
+  }
+
+  /**
+   * onRepair is called when the user initiates repair for an EasyKit device.
+   * Reconnects the BTicino account, acquires fresh tokens and certificates,
+   * and restores all EasyKit devices to the available state without breaking Flows.
+   * @public
+   * @async
+   * @param {Object} session - PairSocket repair session
+   * @param {Homey.Device} device - Device being repaired
+   * @returns {Promise<void>}
+   */
+  async onRepair(session, device) {
+    this.log('Starting repair session for device:', device ? device.getName() : 'unknown');
+
+    let plantId = null;
+    const api = this.auth.createApiClient();
+
+    this._attachAuthHandlers(this.auth, session);
+
+    // Cleanup when repair session ends
+    session.setHandler('disconnect', async () => {
+      this.log('ℹ️ Repair session disconnected, cleaning up...');
+      this._detachAuthHandlers();
+    });
+
+    // Handle plant selection
+    session.setHandler('optionSelected', async (data) => {
+      try {
+        if (data && data.id) {
+          plantId = String(data.id);
+          this.log('Plant selected during repair:', plantId);
+          return { ok: true };
+        }
+        return { ok: false };
+      } catch (e) {
+        this.error('❌ Error handling optionSelected during repair:', e && e.message ? e.message : e);
+        return { ok: false };
+      }
+    });
+
+    // Handle view navigation during repair
+    session.setHandler('showView', async (viewId) => {
+      this.log('Repair view requested:', viewId);
+
+      if (viewId === 'bticino_login') {
+        this.log('Showing login view to user for repair');
+        try {
+          const result = await this.auth.authenticate();
+          if (result && result.tokens) {
+            this.log('✅ Token exchange completed during repair');
+            await session.showView('choose_plant');
+          }
+        } catch (e) {
+          this.error('❌ authenticate() failed during repair:', e && e.message ? e.message : e);
+        }
+      }
+
+      if (viewId === 'choose_plant') {
+        this.log('Showing plants view to user during repair');
+        try {
+          const plants = await api.getPlants();
+          if (Array.isArray(plants) && plants.length > 0) {
+            const mapped = plants.map((p) => {
+              const id = p.id || p.plantId || p._id;
+              const name = p.name || p.displayName || id;
+              return { id: String(id), label: name };
+            });
+            await session.emit('dataOptions', { options: mapped });
+          }
+        } catch (e) {
+          this.error('❌ Error during getPlants() in repair:', e && e.message ? e.message : e);
+        }
+      }
+
+      if (viewId === 'register_device') {
+        try {
+          this.log('ℹ️ Proceeding with device registration during repair; plantId=', plantId);
+          if (plantId) {
+            const gatewayId = await api.getGatewayModuleId(plantId);
+            const res = await this.auth.registerDevice({
+              plantId,
+              gatewayId,
+              forceCertificates: true,
+              async: false,
+              clientName: 'LG Homey Pro 2023'
+            });
+            this.log('✅ registerDevice completed during repair:', res);
+
+            this.homey.settings.set('plantId', plantId);
+            this.homey.settings.set('gatewayId', gatewayId);
+
+            // Re-start SIP listener and restore all devices to available state
+            await this.homey.app.startSipListener();
+            await this.homey.app.setDevicesAvailable();
+
+            this.log('✅ Repair completed successfully, closing repair session');
+            await session.done();
+          } else {
+            this.warn('⚠️ register_device view opened in repair but no plantId selected');
+            await session.showView('choose_plant');
+          }
+        } catch (e) {
+          this.error('❌ registerDevice failed during repair:', e && e.message ? e.message : e);
+          try {
+            await session.showView('choose_plant');
+          } catch (_) {
+            await session.done();
+          }
+        }
       }
     });
   }

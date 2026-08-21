@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    .main-container {
+      position: absolute;
+      top: 5px;
+      left: 10px;
+      right: 10px;
+      bottom: 5px;
+      display: flex;
+      flex-direction: column;
+      background-color: #fff;
+    }
+
+    header,
+    legend {
+      text-align: center;
+    }
+
+    .content-wrapper {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      margin-left: 10px;
+      margin-right: 10px;
+    }
+
+    .homey-button-primary-full {
+      margin-top: auto;
+      align-self: center;
+      margin-bottom: 10px;
+    }
+
+    header {
+      margin-top: 5px;
+    }
+
+    .homey-subtitle {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <header>
+      <h1 class="homey-title" data-i18n="pair.login.title"></h1>
+    </header>
+
+    <div class="content-wrapper">
+      <main>
+        <p class="homey-subtitle" data-i18n="pair.login.description"></p>
+        <p class="homey-subtitle" data-i18n="pair.login.step_open"></p>
+      </main>
+
+      <button id="open-link" class="homey-button-primary-full" type="button" data-i18n="pair.login.open_link"></button>
+    </div>
+  </div>
+
+  <script src="bticino_login.js"></script>
+</body>
+</html>
