@@ -32,9 +32,14 @@ module.exports = class BticinoApp extends Homey.App {
    */
   async setDevicesUnavailable(message) {
     try {
-      const unavailableMsg = message || this.homey.__('device.account_disconnected');
-      const driver = this.homey.drivers.getDriver('easykit');
-      if (driver) {
+      let driver = null;
+      try {
+        driver = this.homey.drivers.getDriver('easykit');
+      } catch (_) {
+        // Driver may not be fully initialized during early bootstrap
+      }
+      if (driver && typeof driver.getDevices === 'function') {
+        const unavailableMsg = message || this.homey.__('device.account_disconnected');
         const devices = driver.getDevices();
         this.log(`Marking ${devices.length} EasyKit device(s) as unavailable`);
         for (const device of devices) {
@@ -58,8 +63,13 @@ module.exports = class BticinoApp extends Homey.App {
    */
   async setDevicesAvailable() {
     try {
-      const driver = this.homey.drivers.getDriver('easykit');
-      if (driver) {
+      let driver = null;
+      try {
+        driver = this.homey.drivers.getDriver('easykit');
+      } catch (_) {
+        // Driver may not be fully initialized during early bootstrap
+      }
+      if (driver && typeof driver.getDevices === 'function') {
         const devices = driver.getDevices();
         this.log(`Marking ${devices.length} EasyKit device(s) as available`);
         for (const device of devices) {
@@ -185,11 +195,11 @@ module.exports = class BticinoApp extends Homey.App {
 
     // SIP listener event handlers
     this._onSipConnected = () => {
-      this.log('SIP Listener connected to server');
+      this.log('[SIP] TLS connection established with server');
     };
 
     this._onSipRegistered = async () => {
-      this.log('SIP Listener registered - listening for doorbell');
+      this.log('[SIP] REGISTER successful - listening for doorbell notifications');
       try {
         if (this._serviceConnectedTrigger) {
           const userLanguage = this.homey.i18n.getLanguage();
@@ -204,29 +214,29 @@ module.exports = class BticinoApp extends Homey.App {
             second: '2-digit'
           });
           await this._serviceConnectedTrigger.trigger({ timestamp: formattedTime });
-          this.log('Flow trigger fired: service_connected');
+          this.log('[Flow] Trigger fired: service_connected at', formattedTime);
         }
       } catch (e) {
-        this.error('Failed to trigger service_connected flow:', e && e.message);
+        this.error('[Flow] Failed to trigger service_connected flow:', e && e.message);
       }
     };
 
     this._onSipKeepalive = () => {
       if (this._getDebugEnabled()) {
-        this.log('SIP Listener keep-alive confirmed');
+        this.log('[SIP] Keep-alive confirmed by server');
       }
     };
 
     this._onSipInvite = async (callInfo) => {
-      this.log('Doorbell rang!', callInfo);
+      this.log('[SIP] Incoming INVITE received (doorbell ringing)');
       
       // Trigger the Flow card
       try {
         // Extract gatewayId from the 'from' field
-        const fromMatch = callInfo.from.match(/@([0-9a-f-]+)\.bs\.iotleg\.com/);
+        const fromMatch = callInfo && callInfo.from ? callInfo.from.match(/@([0-9a-f-]+)\.bs\.iotleg\.com/) : null;
         
         if (!fromMatch || !fromMatch[1]) {
-          this.log('Could not extract gatewayId from SIP message');
+          this.log('[SIP] Could not extract gatewayId from SIP message');
           return;
         }
         
@@ -235,19 +245,18 @@ module.exports = class BticinoApp extends Homey.App {
         
         // Filter: only trigger if gatewayId matches
         if (sipGatewayId !== savedGatewayId) {
-          this.log(`Ignoring call from different gateway: ${sipGatewayId} (saved: ${savedGatewayId})`);
+          this.log(`[SIP] Ignoring call from different gateway: ${sipGatewayId} (saved: ${savedGatewayId})`);
           return;
         }
         
-        this.log('Gateway ID matched, triggering flow');
+        this.log('[SIP] Gateway ID matched, triggering flow');
         
         // Get user's language and timezone from Homey settings
         const userLanguage = this.homey.i18n.getLanguage();
         const userTimezone = await this.homey.clock.getTimezone();
-        this.log(`User language: ${userLanguage}, timezone: ${userTimezone}`);
         
         // Format timestamp using user's locale and timezone
-        const formattedTime = new Date(callInfo.timestamp).toLocaleString(userLanguage, {
+        const formattedTime = new Date(callInfo.timestamp || Date.now()).toLocaleString(userLanguage, {
           timeZone: userTimezone,
           day: '2-digit',
           month: '2-digit',
@@ -262,14 +271,14 @@ module.exports = class BticinoApp extends Homey.App {
         };
         
         await this._doorbellTrigger.trigger(tokens);
-        this.log('Flow trigger fired successfully:', tokens);
+        this.log('[Flow] Trigger fired successfully: doorbell_rang at', formattedTime);
       } catch (e) {
-        this.error('Failed to trigger doorbell flow:', e && e.message);
+        this.error('[Flow] Failed to trigger doorbell flow:', e && e.message);
       }
     };
 
     this._onSipDisconnected = async () => {
-      this.log('SIP Listener disconnected (will auto-reconnect if enabled)');
+      this.log('[SIP] Connection lost (auto-reconnect active)');
       try {
         if (this._serviceDisconnectedTrigger) {
           const userLanguage = this.homey.i18n.getLanguage();
@@ -284,23 +293,23 @@ module.exports = class BticinoApp extends Homey.App {
             second: '2-digit'
           });
           await this._serviceDisconnectedTrigger.trigger({ timestamp: formattedTime });
-          this.log('Flow trigger fired: service_disconnected');
+          this.log('[Flow] Trigger fired: service_disconnected at', formattedTime);
         }
       } catch (e) {
-        this.error('Failed to trigger service_disconnected flow:', e && e.message);
+        this.error('[Flow] Failed to trigger service_disconnected flow:', e && e.message);
       }
     };
 
     this._onSipError = (err) => {
-      this.error('SIP Listener error:', err && err.message);
+      this.error('[SIP] Socket error:', err && err.message ? err.message : err);
     };
 
     this._onSipCertificatesUpdated = (newCerts) => {
-      this.log('SIP Listener certificates updated - listener restarted automatically');
+      this.log('[SIP] Certificates updated - listener restarted successfully');
     };
 
     this._onSipCertificateUpdateError = (err) => {
-      this.error('SIP certificate update failed:', err && err.message);
+      this.error('[SIP] Certificate update failed:', err && err.message ? err.message : err);
     };
 
     // Attach handlers
@@ -378,9 +387,17 @@ module.exports = class BticinoApp extends Homey.App {
 
   /**
    * Start the SIP listener for doorbell notifications
+   * @param {Object} [options] - Options for starting the listener
+   * @param {boolean} [options.forceRestart=false] - Force stopping and recreating listener with new credentials
+   * @returns {Promise<boolean>}
    */
-  async startSipListener() {
+  async startSipListener({ forceRestart = false } = {}) {
     try {
+      if (forceRestart) {
+        this.log('Force restart requested: stopping existing SIP listener...');
+        await this.stopSipListener();
+      }
+
       // Prevent multiple concurrent connection attempts
       if (this._sipConnecting) {
         this.log('SIP connection already in progress, waiting...');
@@ -392,7 +409,7 @@ module.exports = class BticinoApp extends Homey.App {
       }
 
       // Check if listener already exists
-      if (this.auth.hasSipListener()) {
+      if (!forceRestart && this.auth.hasSipListener()) {
         this.log('SIP Listener already exists');
         
         // Check if it's connected

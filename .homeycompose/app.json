@@ -1,92 +1,90 @@
-﻿{
-    "id":  "com.dimapp.bticino.doorentry",
-    "version":  "1.2.0",
-    "compatibility":  "\u003e=12.4.0",
-    "sdk":  3,
-    "platforms":  [
-                      "local"
-                  ],
-    "name":  {
-                 "en":  "BTicino Door Entry EasyKit"
-             },
-    "description":  {
-                        "en":  "Turn your BTicino Door Entry system into a smart home gateway",
-                        "it":  "Trasforma il tuo sistema BTicino Door Entry in un gateway smart home"
-                    },
-    "category":  [
-                     "appliances"
-                 ],
-    "permissions":  [
-
-                    ],
-    "images":  {
-                   "small":  "/assets/images/small.png",
-                   "large":  "/assets/images/large.png",
-                   "xlarge":  "/assets/images/xlarge.png"
-               },
-    "author":  {
-                   "name":  "Simone Di Maio",
-                   "email":  "simone.dimaio77@gmail.com"
-               },
-    "brandColor":  "#f36f21",
-    "source":  "https://github.com/s-dimaio/com.dimapp.bticino.doorentry.git",
-    "bugs":  {
-                 "url":  "https://github.com/s-dimaio/com.dimapp.bticino.doorentry/issues"
-             },
-    "tags":  {
-                 "en":  [
-                            "BTicino",
-                            "Door Entry",
-                            "Intercom",
-                            "Video Doorbell"
-                        ],
-                 "it":  [
-                            "BTicino",
-                            "Door Entry",
-                            "Citofono",
-                            "Videocitofono",
-                            "Campanello"
-                        ]
-             },
-    "contributing":  {
-                         "donate":  {
-                                        "paypal":  {
-                                                       "username":  "sdimaio77"
-                                                   }
-                                    }
-                     },
-    "api":  {
-                "getAccountStatus":  {
-                                         "method":  "GET",
-                                         "path":  "/account/status"
-                                     },
-                "disconnectAccount":  {
-                                          "method":  "POST",
-                                          "path":  "/account/disconnect"
-                                      },
-                "getDiagnosticPlants":  {
-                                            "method":  "GET",
-                                            "path":  "/diagnostic/plants"
-                                        },
-                "getDiagnosticModules":  {
-                                             "method":  "GET",
-                                             "path":  "/diagnostic/modules"
-                                         },
-                "getDiagnosticSipAccounts":  {
-                                                 "method":  "GET",
-                                                 "path":  "/diagnostic/sip-accounts"
-                                             },
-                "listDiagnosticFiles":  {
-                                            "method":  "GET",
-                                            "path":  "/diagnostic/files"
-                                        },
-                "deleteDiagnosticFile":  {
-                                             "method":  "DELETE",
-                                             "path":  "/diagnostic/file/:filename"
-                                         },
-                "deleteAllDiagnosticFiles":  {
-                                                 "method":  "DELETE",
-                                                 "path":  "/diagnostic/files"
-                                             }
-            }
+{
+  "id": "com.dimapp.bticino.doorentry",
+  "version": "1.2.2",
+  "compatibility": ">=12.4.0",
+  "sdk": 3,
+  "platforms": [
+    "local"
+  ],
+  "name": {
+    "en": "BTicino Door Entry EasyKit"
+  },
+  "description": {
+    "en": "Turn your BTicino Door Entry system into a smart home gateway",
+    "it": "Trasforma il tuo sistema BTicino Door Entry in un gateway smart home"
+  },
+  "category": [
+    "appliances"
+  ],
+  "permissions": [],
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": {
+    "name": "Simone Di Maio",
+    "email": "simone.dimaio77@gmail.com"
+  },
+  "brandColor": "#f36f21",
+  "source": "https://github.com/s-dimaio/com.dimapp.bticino.doorentry.git",
+  "bugs": {
+    "url": "https://github.com/s-dimaio/com.dimapp.bticino.doorentry/issues"
+  },
+  "tags": {
+    "en": [
+      "BTicino",
+      "Door Entry",
+      "Intercom",
+      "Video Doorbell"
+    ],
+    "it": [
+      "BTicino",
+      "Door Entry",
+      "Citofono",
+      "Videocitofono",
+      "Campanello"
+    ]
+  },
+  "contributing": {
+    "donate": {
+      "paypal": {
+        "username": "sdimaio77"
+      }
+    }
+  },
+  "api": {
+    "getAccountStatus": {
+      "method": "GET",
+      "path": "/account/status"
+    },
+    "disconnectAccount": {
+      "method": "POST",
+      "path": "/account/disconnect"
+    },
+    "getDiagnosticPlants": {
+      "method": "GET",
+      "path": "/diagnostic/plants"
+    },
+    "getDiagnosticModules": {
+      "method": "GET",
+      "path": "/diagnostic/modules"
+    },
+    "getDiagnosticSipAccounts": {
+      "method": "GET",
+      "path": "/diagnostic/sip-accounts"
+    },
+    "listDiagnosticFiles": {
+      "method": "GET",
+      "path": "/diagnostic/files"
+    },
+    "deleteDiagnosticFile": {
+      "method": "DELETE",
+      "path": "/diagnostic/file/:filename"
+    },
+    "deleteAllDiagnosticFiles": {
+      "method": "DELETE",
+      "path": "/diagnostic/files"
+    }
+  }
 }

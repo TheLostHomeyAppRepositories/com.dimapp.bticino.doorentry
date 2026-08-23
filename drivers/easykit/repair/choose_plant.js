@@ -15,9 +15,19 @@
       return;
     }
 
+    // Find the first option with count > 0, or default to index 0
+    let defaultSelectedId = null;
+    const firstWithDevices = options.find(it => typeof it === 'object' && it.count > 0);
+    if (firstWithDevices && firstWithDevices.id) {
+      defaultSelectedId = String(firstWithDevices.id);
+    } else if (options.length > 0) {
+      defaultSelectedId = String(options[0].id || options[0].value || options[0]._id || '0');
+    }
+
     options.forEach((opt, index) => {
       const id = String(opt.id || opt.value || opt._id || index);
-      const labelText = opt.label || opt.name || opt.title || id;
+      const titleText = opt.title || opt.label || opt.name || id;
+      const subtitleText = opt.subtitle || null;
 
       const label = document.createElement('label');
       label.className = 'homey-form-radio';
@@ -27,7 +37,7 @@
       input.type = 'radio';
       input.name = 'plant-selection';
       input.value = id;
-      if (index === 0) {
+      if (id === defaultSelectedId) {
         input.checked = true;
         selectedId = id;
         if (hiddenInput) hiddenInput.value = id;
@@ -48,8 +58,22 @@
       checkmark.className = 'homey-form-radio-checkmark';
 
       const textSpan = document.createElement('span');
-      textSpan.className = 'homey-form-radio-text';
-      textSpan.textContent = labelText;
+      textSpan.className = 'homey-form-radio-text plant-option-text';
+
+      if (subtitleText) {
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'plant-title';
+        titleSpan.textContent = titleText;
+
+        const subSpan = document.createElement('span');
+        subSpan.className = 'plant-subtitle';
+        subSpan.textContent = subtitleText;
+
+        textSpan.appendChild(titleSpan);
+        textSpan.appendChild(subSpan);
+      } else {
+        textSpan.textContent = titleText;
+      }
 
       label.appendChild(input);
       label.appendChild(checkmark);

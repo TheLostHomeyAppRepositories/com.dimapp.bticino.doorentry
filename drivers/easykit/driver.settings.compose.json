@@ -1,29 +1,47 @@
 [
     {
+        "id": "gateId",
+        "type": "text",
+        "label": {
+            "en": "Gate / Lock Module ID",
+            "it": "ID Modulo Cancello / Serratura"
+        },
+        "value": "",
+        "hint": {
+            "en": "The unique BTicino module ID associated with this lock. You can find this in Settings > Debug & Diagnostics.",
+            "it": "L'ID univoco del modulo BTicino associato a questa serratura. Puoi trovarlo in Impostazioni > Debug e Diagnostica."
+        }
+    },
+    {
         "id": "autoClose",
         "type": "checkbox",
         "label": {
-            "en": "Auto-Close Lock"
+            "en": "Auto-Close Lock",
+            "it": "Chiusura automatica serratura"
         },
         "value": false,
         "hint": {
-            "en": "Close the lock automatically after a delay."
+            "en": "Close the lock automatically after a delay.",
+            "it": "Ripristina lo stato di chiuso automaticamente dopo un intervallo di tempo."
         }
     },
     {
         "id": "autoCloseDelay",
         "type": "number",
         "label": {
-            "en": "Auto-Close Delay"
+            "en": "Auto-Close Delay",
+            "it": "Ritardo chiusura automatica"
         },
         "hint": {
-            "en": "The delay in seconds before the lock auto closes."
+            "en": "The delay in seconds before the lock auto closes.",
+            "it": "Il ritardo in secondi prima del ripristino automatico."
         },
         "value": 30,
         "min": 0,
         "max": 600,
         "units": {
-            "en": "seconds"
+            "en": "seconds",
+            "it": "secondi"
         }
     }
 ]

@@ -8,7 +8,11 @@
 		},
 		"choose_plant": {
 			"title": "Choose your BTicino plant",
-			"confirm": "Confirm"
+			"confirm": "Confirm",
+			"devices_singular": "1 device",
+			"devices_plural": "__count__ devices",
+			"no_devices": "0 devices",
+			"activated_on": "Activated on"
 		},
 		"success_message": "You can now close this window."
 	},
@@ -19,6 +23,7 @@
 		"title": "BTicino Door Entry Settings",
 		"subtitle": "Configure your app preferences",
 		"menu": {
+			"title": "BTicino Door Entry Settings",
 			"account_title": "Account",
 			"account_desc": "Connection status and account management",
 			"debug_title": "Debug & Diagnostics",
@@ -35,7 +40,7 @@
 			"error_generic": "An error occurred"
 		},
 		"account": {
-			"title": "BTicino Account",
+			"title": "Account",
 			"subtitle": "View your connection status or disconnect the app from BTicino cloud services.",
 			"status_card_title": "Connection Status",
 			"status_connected": "Connected",

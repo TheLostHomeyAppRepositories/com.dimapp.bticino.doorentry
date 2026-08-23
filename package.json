@@ -1,18 +1,18 @@
-﻿{
-    "name":  "com.dimapp.bticino.doorentry",
-    "version":  "1.2.0",
-    "main":  "app.js",
-    "scripts":  {
-                    "run:local":  "node dev-scripts/sync-local-lib.js \u0026\u0026 homey app run --r",
-                    "run:github":  "npm install \u0026\u0026 homey app run --r",
-                    "install:local":  "node dev-scripts/sync-local-lib.js \u0026\u0026 homey app install",
-                    "install:github":  "npm install \u0026\u0026 homey app install",
-                    "publish:app":  "node dev-scripts/publish-app.js"
-                },
-    "devDependencies":  {
-                            "@types/homey":  "npm:homey-apps-sdk-v3-types@^0.3.12"
-                        },
-    "dependencies":  {
-                         "door-entry":  "git+https://github.com/s-dimaio/BTicinoDoorEntry.git#v2.0.10"
-                     }
+{
+  "name": "com.dimapp.bticino.doorentry",
+  "version": "1.2.2",
+  "main": "app.js",
+  "scripts": {
+    "debug:local": "node dev-scripts/sync-local-lib.js && homey app run --r",
+    "debug:github": "npm install && homey app run --r",
+    "install:local": "node dev-scripts/sync-local-lib.js && homey app install",
+    "install:github": "npm install && homey app install",
+    "publish": "node dev-scripts/publish-app.js"
+  },
+  "devDependencies": {
+    "@types/homey": "npm:homey-apps-sdk-v3-types@^0.3.12"
+  },
+  "dependencies": {
+    "door-entry": "git+https://github.com/s-dimaio/BTicinoDoorEntry.git#v2.0.13"
+  }
 }

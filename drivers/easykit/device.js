@@ -56,6 +56,13 @@ module.exports = class BticinoGateDevice extends Homey.Device {
       await this.setAvailable().catch(this.error);
     }
 
+    // Ensure gateId setting is populated from device data if not yet configured
+    const currentGateId = this.getSetting('gateId');
+    const dataId = (this.getData && this.getData().id) ? this.getData().id : null;
+    if ((!currentGateId || String(currentGateId).trim() === '') && dataId) {
+      await this.setSettings({ gateId: String(dataId) }).catch(this.error);
+    }
+
     // Initialize the 'locked' capability to true on device init
     await this.setCapabilityValue('locked', true).catch(this.error);
 
@@ -71,7 +78,11 @@ module.exports = class BticinoGateDevice extends Homey.Device {
           throw new Error('Account disconnected or missing credentials');
         }
 
-        const gateId = (this.getData && this.getData().id) ? this.getData().id : this.getId();
+        const settingGateId = this.getSetting('gateId');
+        const defaultGateId = (this.getData && this.getData().id) ? this.getData().id : this.getId();
+        const gateId = (settingGateId && String(settingGateId).trim() !== '')
+          ? String(settingGateId).trim()
+          : defaultGateId;
         const plantId = this.homey.settings.get('plantId');
         const certs = this.homey.settings.get('certificates');
         const sipAccount = this.homey.settings.get('sip_account');

@@ -11,26 +11,26 @@ module.exports = class BticinoLockDriver extends Homey.Driver {
     this._onDeviceRegistered = async (payload) => {
       try {
         if (payload && payload.result) {
-          this.log('ℹ️ Sip Account data saved to Homey settings');
+          this.log('[Driver] SIP Account data saved to Homey settings');
           this.homey.settings.set('sip_account', payload.result);
         } else {
-          this.error('❌ deviceRegistered event missing result payload');
+          this.error('[Driver] deviceRegistered event missing result payload');
         }
       } catch (e) {
-        this.error('❌  deviceRegistered handler error:', e && e.message);
+        this.error('[Driver] deviceRegistered handler error:', e && e.message);
       }
     };
 
     this._onLoginUrlCreated = async ({ state, loginUrl: newLoginUrl }) => {
       try {
-        this.log('ℹ️  Login URL (open manually):', newLoginUrl);
+        this.log('[Driver] Login URL created:', newLoginUrl);
         try {
           await session.emit('dataLogin', { loginUrl: newLoginUrl });
         } catch (e) {
-          this.warn('⚠️ emit dataLogin error (might be view not open yet):', e && e.message);
+          this.warn('[Driver] emit dataLogin error (view might not be open yet):', e && e.message);
         }
       } catch (e) {
-        this.error('❌ loginUrl handler error:', e && e.message);
+        this.error('[Driver] loginUrl handler error:', e && e.message);
       }
     };
 
@@ -48,10 +48,84 @@ module.exports = class BticinoLockDriver extends Homey.Driver {
         this.auth.off('loginUrlCreated', this._onLoginUrlCreated);
         this._onLoginUrlCreated = null;
       }
-      this.log('ℹ️ Pairing auth handlers detached');
+      this.log('[Driver] Pairing auth handlers detached');
     }
   }
 
+
+  /**
+   * Format plant objects with module counts and activation dates for pairing/repair UI.
+   * @private
+   * @param {Array<Object>} plants - List of plants returned by API
+   * @param {Array<Object>} [modules] - List of modules returned by API
+   * @returns {Array<{id: string, label: string, title: string, subtitle: string|null, count: number}>}
+   * @example
+   * const options = this._formatPlantsOptions(plants, modules);
+   */
+  _formatPlantsOptions(plants, modules = []) {
+    if (!Array.isArray(plants) || plants.length === 0) {
+      return [];
+    }
+
+    const userLanguage = this.homey.i18n.getLanguage();
+    const modulesList = Array.isArray(modules) ? modules : [];
+
+    const mapped = plants.map((p) => {
+      const id = String(p.id || p.plantId || p._id || '');
+      const name = p.name || p.displayName || id;
+
+      // Count modules belonging to this plant
+      const plantModules = modulesList.filter((m) => m && (
+        String(m.plantId) === id ||
+        String(m.plant_id) === id ||
+        (m.plant && String(m.plant.id) === id)
+      ));
+      const count = plantModules.length;
+
+      // Format device count label
+      let countLabel = '';
+      if (count === 1) {
+        countLabel = this.homey.__('pair.choose_plant.devices_singular') || '1 device';
+      } else if (count > 1) {
+        const pluralTpl = this.homey.__('pair.choose_plant.devices_plural') || '__count__ devices';
+        countLabel = pluralTpl.replace('__count__', String(count));
+      } else {
+        countLabel = this.homey.__('pair.choose_plant.no_devices') || '0 devices';
+      }
+
+      const title = `${name} (${countLabel})`;
+
+      // Format activation date if present
+      let subtitle = null;
+      if (p.activationDate) {
+        try {
+          const date = new Date(p.activationDate);
+          if (!isNaN(date.getTime())) {
+            const formattedDate = date.toLocaleDateString(userLanguage, {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
+            });
+            const activatedLabel = this.homey.__('pair.choose_plant.activated_on') || 'Activated on';
+            subtitle = `${activatedLabel}: ${formattedDate}`;
+          }
+        } catch (_) {}
+      }
+
+      return {
+        id,
+        label: title,
+        title,
+        subtitle,
+        count
+      };
+    });
+
+    // Sort: plants with devices (count > 0) first, then by count descending
+    mapped.sort((a, b) => b.count - a.count);
+
+    return mapped;
+  }
 
   async _hasSavedAccountData() {
     // Check that required Homey.settings keys are present and non-empty.
@@ -79,7 +153,7 @@ module.exports = class BticinoLockDriver extends Homey.Driver {
       }
       return true;
     } catch (e) {
-      this.error('❌ _hasSavedAccountData failed:', e && e.message ? e.message : e);
+      this.error('[Driver] _hasSavedAccountData failed:', e && e.message ? e.message : e);
       return false;
     }
   }
@@ -102,7 +176,7 @@ module.exports = class BticinoLockDriver extends Homey.Driver {
 
     // Cleanup when pairing session ends (success, cancel, or error)
     session.setHandler('disconnect', async () => {
-      this.log('ℹ️ Pairing session disconnected, cleaning up...');
+      this.log('[Pairing] Session disconnected, cleaning up handlers...');
       this._detachAuthHandlers();
     });
 
@@ -111,12 +185,12 @@ module.exports = class BticinoLockDriver extends Homey.Driver {
       try {
         if (data && data.id) {
           plantId = String(data.id);
-          this.log('Plant selected during pairing:', plantId);
+          this.log('[Pairing] Plant selected:', plantId);
           return { ok: true };
         }
         return { ok: false };
       } catch (e) {
-        this.error('❌ Error handling optionSelected:', e && e.message ? e.message : e);
+        this.error('[Pairing] Error handling optionSelected:', e && e.message ? e.message : e);
         return { ok: false };
       }
     });
@@ -141,14 +215,14 @@ module.exports = class BticinoLockDriver extends Homey.Driver {
 
             const result = await this.auth.authenticate();
             if (result && result.tokens) {
-              this.log('✅ Token obtained from cache');
-              this.log('Access token expires at', result.tokens.expiresAt);
+              this.log('[Pairing] Token obtained from cache');
+              this.log('[Pairing] Access token expires at', result.tokens.expiresAt);
 
               plantId = this.homey.settings.get('plantId');
 
               await session.showView('list_lock_devices');
             } else {
-              this.log('ℹ️  authenticate() returned with no tokens or from cache.');
+              this.log('[Pairing] authenticate() returned with no tokens or from cache');
             }
 
           } catch (e) {
@@ -171,15 +245,15 @@ module.exports = class BticinoLockDriver extends Homey.Driver {
         try {
           const result = await this.auth.authenticate();
           if (result && result.tokens) {
-            this.log('✅ Token exchange completed');
-            this.log('Access token expires at', result.tokens.expiresAt);
+            this.log('[Pairing] Token exchange completed');
+            this.log('[Pairing] Access token expires at', result.tokens.expiresAt);
 
             await session.showView('choose_plant');
           } else {
-            this.log('ℹ️  authenticate() returned with no tokens or from cache.');
+            this.log('[Pairing] authenticate() returned with no tokens or from cache');
           }
         } catch (e) {
-          this.error('❌ authenticate() failed:', e && e.message ? e.message : e);
+          this.error('[Pairing] authenticate() failed:', e && e.message ? e.message : e);
         }
       }
 
@@ -188,67 +262,41 @@ module.exports = class BticinoLockDriver extends Homey.Driver {
 
         const api = this.auth.createApiClient();
 
-        // Fetch and list plants from API
-        let fetchedPlants = null;
         try {
-          this.log('ℹ️  Fetching plants from API...');
-          const plants = await api.getPlants();
-          fetchedPlants = plants;
+          this.log('[Pairing] Fetching plants and modules from API...');
+          const [plants, modules] = await Promise.all([
+            api.getPlants().catch((err) => {
+              this.error('[Pairing] Error fetching plants:', err && err.message);
+              return [];
+            }),
+            api.getModules().catch((err) => {
+              this.warn('[Pairing] Could not fetch modules for plant mapping:', err && err.message);
+              return [];
+            })
+          ]);
 
-          // 🔍 Log dettagliato risposta API
-          this.log('📊 API getPlants() response details:');
-          this.log('  - Type:', typeof plants);
-          this.log('  - Is Array:', Array.isArray(plants));
-          this.log('  - Length:', Array.isArray(plants) ? plants.length : 'N/A');
-          this.log('  - Raw response (first 500 chars):', JSON.stringify(plants).substring(0, 500));
+          const mapped = this._formatPlantsOptions(plants, modules);
+          this.log(`[Pairing] Formatted ${mapped.length} plant option(s) for UI`);
 
-          if (!Array.isArray(plants) || plants.length === 0) {
-            this.log('⚠️  No plants returned from the API (empty array or null)');
-            this.log('  - Full response:', JSON.stringify(plants));
-            return [];
-          } else {
-            this.log('✅ List of plants found:');
-            const seen = new Set();
-            const mapped = [];
-            for (const p of plants) {
-              if (!p || typeof p !== 'object') continue;
-              const id = p.id || p.plantId || p._id || null;
-              const name = p.name || p.displayName || null;
-              if (!id) continue;
-              const sid = String(id);
-              if (seen.has(sid)) continue;
-              seen.add(sid);
-              if (name) this.log(` - ${name} (id: ${sid})`);
-              else this.log(` - id: ${sid}`);
-              mapped.push({ id: sid, label: name || sid });
-            }
-
-            // Send mapped plants to the pairing frontend so it can render radio buttons
-            try {
-              await session.emit('dataOptions', { options: mapped });
-            } catch (e) {
-              this.warn('⚠️ Failed to emit dataOptions to pairing view:', e && e.message);
-            }
-          }
+          await session.emit('dataOptions', { options: mapped });
         } catch (e) {
-          this.error('❌ Error during getPlants():', e && e.message ? e.message : e);
-          return [];
+          this.error('[Pairing] Error during choose_plant handling:', e && e.message ? e.message : e);
         }
       }
 
       if (viewId === 'register_device') {
         try {
-          this.log('ℹ️  Proceeding with device registration; plantId=', plantId);
+          this.log('[Pairing] Proceeding with device registration; plantId=', plantId);
 
           // Attempt to determine gatewayId via API helper when plantId is available
           if (plantId) {
             try {
               const gatewayId = await api.getGatewayModuleId(plantId);
 
-              this.log('ℹ️  Starting device registration (this may provision certificates)...', gatewayId);
+              this.log('[Pairing] Starting device registration (this may provision certificates)...', gatewayId);
 
               const res = await this.auth.registerDevice({ plantId, gatewayId, async: false, clientName: 'LG Homey Pro 2023' });
-              this.log('✅ registerDevice completed:', res);
+              this.log('[Pairing] registerDevice completed:', res);
 
               // Save plantId and gatewayId in Homey settings for later use
               this.homey.settings.set('plantId', plantId);
@@ -256,13 +304,13 @@ module.exports = class BticinoLockDriver extends Homey.Driver {
 
               session.nextView();
             } catch (e) {
-              this.error('❌ Device registration skipped; could not determine gatewayId from plantId: ', e && e.message ? e.message : e);
+              this.error('[Pairing] Device registration skipped; could not determine gatewayId from plantId:', e && e.message ? e.message : e);
             }
           } else {
-            this.warn('⚠️ register_device view opened but no plantId selected');
+            this.warn('[Pairing] register_device view opened but no plantId selected');
           }
         } catch (e) {
-          this.error('❌ registerDevice failed:', e && e.message ? e.message : e);
+          this.error('[Pairing] registerDevice failed:', e && e.message ? e.message : e);
         }
 
       }
@@ -298,6 +346,9 @@ module.exports = class BticinoLockDriver extends Homey.Driver {
             },
             store: {
               gatewayId: gatewayId
+            },
+            settings: {
+              gateId: String(id)
             }
           };
         }).filter(d => d.data && d.data.id);
@@ -305,7 +356,7 @@ module.exports = class BticinoLockDriver extends Homey.Driver {
         this.log(`list_devices: returning ${devices.length} lock(s)`);
         return devices;
       } catch (e) {
-        this.error('❌ list_devices failed:', e && e.message ? e.message : e);
+        this.error('[Pairing] list_devices failed:', e && e.message ? e.message : e);
         return [];
       }
     });
@@ -324,6 +375,9 @@ module.exports = class BticinoLockDriver extends Homey.Driver {
   async onRepair(session, device) {
     this.log('Starting repair session for device:', device ? device.getName() : 'unknown');
 
+    // Ensure driver always uses the current active authentication instance
+    this.auth = this.homey.app.auth;
+
     let plantId = null;
     const api = this.auth.createApiClient();
 
@@ -331,7 +385,7 @@ module.exports = class BticinoLockDriver extends Homey.Driver {
 
     // Cleanup when repair session ends
     session.setHandler('disconnect', async () => {
-      this.log('ℹ️ Repair session disconnected, cleaning up...');
+      this.log('[Repair] Session disconnected, cleaning up handlers...');
       this._detachAuthHandlers();
     });
 
@@ -340,55 +394,65 @@ module.exports = class BticinoLockDriver extends Homey.Driver {
       try {
         if (data && data.id) {
           plantId = String(data.id);
-          this.log('Plant selected during repair:', plantId);
+          this.log('[Repair] Plant selected:', plantId);
           return { ok: true };
         }
         return { ok: false };
       } catch (e) {
-        this.error('❌ Error handling optionSelected during repair:', e && e.message ? e.message : e);
+        this.error('[Repair] Error handling optionSelected:', e && e.message ? e.message : e);
         return { ok: false };
       }
     });
 
     // Handle view navigation during repair
     session.setHandler('showView', async (viewId) => {
-      this.log('Repair view requested:', viewId);
+      this.log('[Repair] View requested:', viewId);
 
       if (viewId === 'bticino_login') {
-        this.log('Showing login view to user for repair');
+        this.log('[Repair] Showing login view to user');
         try {
           const result = await this.auth.authenticate();
           if (result && result.tokens) {
-            this.log('✅ Token exchange completed during repair');
+            this.log('[Repair] Token exchange completed');
             await session.showView('choose_plant');
           }
         } catch (e) {
-          this.error('❌ authenticate() failed during repair:', e && e.message ? e.message : e);
+          this.error('[Repair] authenticate() failed:', e && e.message ? e.message : e);
         }
       }
 
       if (viewId === 'choose_plant') {
-        this.log('Showing plants view to user during repair');
+        this.log('[Repair] Showing plants view to user');
         try {
-          const plants = await api.getPlants();
-          if (Array.isArray(plants) && plants.length > 0) {
-            const mapped = plants.map((p) => {
-              const id = p.id || p.plantId || p._id;
-              const name = p.name || p.displayName || id;
-              return { id: String(id), label: name };
-            });
-            await session.emit('dataOptions', { options: mapped });
-          }
+          const [plants, modules] = await Promise.all([
+            api.getPlants().catch((err) => {
+              this.error('[Repair] Error fetching plants:', err && err.message);
+              return [];
+            }),
+            api.getModules().catch((err) => {
+              this.warn('[Repair] Could not fetch modules:', err && err.message);
+              return [];
+            })
+          ]);
+
+          const mapped = this._formatPlantsOptions(plants, modules);
+          this.log(`[Repair] Formatted ${mapped.length} plant option(s) for UI`);
+
+          await session.emit('dataOptions', { options: mapped });
         } catch (e) {
-          this.error('❌ Error during getPlants() in repair:', e && e.message ? e.message : e);
+          this.error('[Repair] Error during choose_plant handling:', e && e.message ? e.message : e);
         }
       }
 
       if (viewId === 'register_device') {
         try {
-          this.log('ℹ️ Proceeding with device registration during repair; plantId=', plantId);
+          this.log('[Repair] Proceeding with device registration; plantId=', plantId);
           if (plantId) {
             const gatewayId = await api.getGatewayModuleId(plantId);
+            if (!gatewayId) {
+              throw new Error(`No gateway module found for plantId ${plantId}`);
+            }
+
             const res = await this.auth.registerDevice({
               plantId,
               gatewayId,
@@ -396,27 +460,37 @@ module.exports = class BticinoLockDriver extends Homey.Driver {
               async: false,
               clientName: 'LG Homey Pro 2023'
             });
-            this.log('✅ registerDevice completed during repair:', res);
+            this.log('[Repair] registerDevice completed successfully:', res);
 
+            // Explicitly save settings to guarantee atomicity
             this.homey.settings.set('plantId', plantId);
             this.homey.settings.set('gatewayId', gatewayId);
+            if (res && res.result) {
+              this.homey.settings.set('sip_account', res.result);
+            }
+            if (res && res.certificates) {
+              this.homey.settings.set('certificates', {
+                cert: res.certificates.certPEM,
+                key: res.certificates.privateKeyPem
+              });
+            }
 
             // Re-start SIP listener and restore all devices to available state
-            await this.homey.app.startSipListener();
+            await this.homey.app.startSipListener({ forceRestart: true });
             await this.homey.app.setDevicesAvailable();
 
-            this.log('✅ Repair completed successfully, closing repair session');
+            this.log('[Repair] Completed successfully, closing repair session');
             await session.done();
           } else {
-            this.warn('⚠️ register_device view opened in repair but no plantId selected');
+            this.warn('[Repair] register_device view opened but no plantId selected');
             await session.showView('choose_plant');
           }
         } catch (e) {
-          this.error('❌ registerDevice failed during repair:', e && e.message ? e.message : e);
+          this.error('[Repair] registerDevice failed:', e && e.message ? e.message : e);
           try {
             await session.showView('choose_plant');
           } catch (_) {
-            await session.done();
+            // Do not call session.done() on error
           }
         }
       }
