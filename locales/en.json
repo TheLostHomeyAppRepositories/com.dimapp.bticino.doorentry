@@ -14,10 +14,22 @@
 			"no_devices": "0 devices",
 			"activated_on": "Activated on"
 		},
+		"default_camera_name": "Camera",
+		"indoor_camera_name": "Indoor Camera",
+		"outdoor_camera_name": "Outdoor Camera",
 		"success_message": "You can now close this window."
 	},
 	"device": {
-		"account_disconnected": "BTicino account is disconnected. Please repair the device to reconnect."
+		"account_disconnected": "BTicino account is disconnected. Please repair the device to reconnect.",
+		"camera_video_title": "Camera",
+		"camera_image_title": "Snapshot"
+	},
+	"errors": {
+		"device_not_found": "Device not found",
+		"device_not_camera": "The selected device is not a camera",
+		"snapshot_unsupported": "The selected device does not support snapshot capture",
+		"snapshot_timeout": "Timeout waiting for camera snapshot",
+		"snapshot_empty": "Snapshot capture failed (empty image received)"
 	},
 	"settings": {
 		"title": "BTicino Door Entry Settings",

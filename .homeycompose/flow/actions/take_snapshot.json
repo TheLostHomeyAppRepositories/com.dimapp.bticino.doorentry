@@ -1,0 +1,28 @@
+{
+  "id": "take_snapshot",
+  "title": {
+    "en": "Take a snapshot",
+    "it": "Scatta un'istantanea"
+  },
+  "hint": {
+    "en": "Capture a live snapshot from the camera",
+    "it": "Cattura un'istantanea in tempo reale dalla telecamera"
+  },
+  "args": [
+    {
+      "type": "device",
+      "name": "device",
+      "filter": "driver_id=easykit&class=camera"
+    }
+  ],
+  "tokens": [
+    {
+      "name": "snapshot",
+      "type": "image",
+      "title": {
+        "en": "Snapshot",
+        "it": "Istantanea"
+      }
+    }
+  ]
+}

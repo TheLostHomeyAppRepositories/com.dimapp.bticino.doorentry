@@ -50,5 +50,13 @@
   "1.2.2": {
     "en": "(i) Added Flow trigger cards to receive notifications on BTicino service connection status (connected / disconnected)\n (ii) Redesigned App Settings with a cleaner and simpler interface\n (iii) Added the ability to disconnect and manage your account\n (iv) Added support for device repair to reconnect without losing devices or Flows\n (v) Added the ability to manually customize the Gate Module ID in device settings\n (vi) General improvements and optimizations",
     "it": "(i) Aggiunti i Flow card per ricevere notifiche sullo stato di connessione al servizio BTicino (connesso / disconnesso)\n (ii) Riprogettate le impostazioni dell'app con una nuova interfaccia più semplice e chiara\n (iii) Aggiunta la possibilità di disconnettere e gestire il proprio account\n (iv) Aggiunto il supporto al Ripara (Repair) per riconnettersi senza perdere dispositivi o Flow\n (v) Aggiunta la possibilità di modificare manualmente l'ID del cancello/serratura nelle impostazioni del dispositivo\n (vi) Miglioramenti generali e ottimizzazioni"
+  },
+  "1.2.3": {
+    "en": "(i) Added Flow condition card to check BTicino service connection status (connected / disconnected); \n(ii) General improvements and optimizations.",
+    "it": "(i) Aggiunta la Flow condition card per verificare lo stato di connessione al servizio BTicino (connesso / disconnesso); \n(ii) Miglioramenti generali e ottimizzazioni."
+  },
+  "2.0.0": {
+    "en": "(i) Added support for outdoor intercom cameras with live video viewing; \n(ii) Added the ability to capture camera snapshots in Flows and attach them to notifications; \n(iii) Added a new Flow trigger for missed doorbell calls when nobody answers; \n(iv) Updated icons with dedicated designs for cameras and locks; \n(v) General improvements.",
+    "it": "(i) Aggiunto il supporto alle telecamere del videocitofono con visione video in diretta; \n(ii) Aggiunta la possibilità di scattare foto dalle telecamere nei Flow e allegarle alle notifiche; \n(iii) Aggiunto un nuovo evento Flow per le chiamate perse al campanello quando nessuno risponde; \n(iv) Aggiornate le icone con simboli dedicati per telecamere e serrature; \n(v) Miglioramenti generali."
   }
 }

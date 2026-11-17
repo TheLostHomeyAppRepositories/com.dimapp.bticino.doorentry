@@ -1,15 +1,28 @@
 [
     {
-        "id": "gateId",
+        "id": "moduleId",
         "type": "text",
         "label": {
-            "en": "Gate / Lock Module ID",
-            "it": "ID Modulo Cancello / Serratura"
+            "en": "Module ID",
+            "it": "ID Modulo"
         },
         "value": "",
         "hint": {
-            "en": "The unique BTicino module ID associated with this lock. You can find this in Settings > Debug & Diagnostics.",
-            "it": "L'ID univoco del modulo BTicino associato a questa serratura. Puoi trovarlo in Impostazioni > Debug e Diagnostica."
+            "en": "The unique BTicino module ID associated with this device. You can find this in Settings > Debug & Diagnostics.",
+            "it": "L'ID univoco del modulo BTicino associato a questo dispositivo. Puoi trovarlo in Impostazioni > Debug e Diagnostica."
+        }
+    },
+    {
+        "id": "cameraIndex",
+        "type": "label",
+        "label": {
+            "en": "Channel Index",
+            "it": "Indice Canale"
+        },
+        "value": "0",
+        "hint": {
+            "en": "Channel index for this device (0 = Lock/Gate, 1 = Main outdoor camera, >1 = Secondary cameras).",
+            "it": "Indice del canale per questo dispositivo (0 = Serratura/Cancello, 1 = Telecamera principale posto esterno, >1 = Telecamere secondarie)."
         }
     },
     {

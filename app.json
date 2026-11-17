@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.dimapp.bticino.doorentry",
-  "version": "1.2.2",
+  "version": "2.0.0",
   "compatibility": ">=12.4.0",
   "sdk": 3,
   "platforms": [
@@ -91,6 +91,31 @@
   "flow": {
     "triggers": [
       {
+        "id": "doorbell_call_missed",
+        "title": {
+          "en": "Doorbell call missed",
+          "it": "Chiamata persa al campanello"
+        },
+        "hint": {
+          "en": "When someone rings the doorbell and nobody answers",
+          "it": "Quando qualcuno suona il campanello e nessuno risponde"
+        },
+        "tokens": [
+          {
+            "name": "timestamp",
+            "type": "string",
+            "title": {
+              "en": "Time",
+              "it": "Ora"
+            },
+            "example": {
+              "en": "12/13/2025, 6:23:39 PM",
+              "it": "13/12/2025, 18:23:39"
+            }
+          }
+        ]
+      },
+      {
         "id": "doorbell_rang",
         "title": {
           "en": "Doorbell rang",
@@ -165,6 +190,49 @@
           }
         ]
       }
+    ],
+    "conditions": [
+      {
+        "id": "service_is_connected",
+        "title": {
+          "en": "BTicino service !{{is|is not}} connected",
+          "it": "Il servizio BTicino !{{è|non è}} connesso"
+        },
+        "hint": {
+          "en": "Check if the app is currently connected to the BTicino cloud service",
+          "it": "Verifica se l'app è attualmente connessa al servizio cloud BTicino"
+        }
+      }
+    ],
+    "actions": [
+      {
+        "id": "take_snapshot",
+        "title": {
+          "en": "Take a snapshot",
+          "it": "Scatta un'istantanea"
+        },
+        "hint": {
+          "en": "Capture a live snapshot from the camera",
+          "it": "Cattura un'istantanea in tempo reale dalla telecamera"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=easykit&class=camera"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "snapshot",
+            "type": "image",
+            "title": {
+              "en": "Snapshot",
+              "it": "Istantanea"
+            }
+          }
+        ]
+      }
     ]
   },
   "drivers": [
@@ -234,16 +302,29 @@
       "id": "easykit",
       "settings": [
         {
-          "id": "gateId",
+          "id": "moduleId",
           "type": "text",
           "label": {
-            "en": "Gate / Lock Module ID",
-            "it": "ID Modulo Cancello / Serratura"
+            "en": "Module ID",
+            "it": "ID Modulo"
           },
           "value": "",
           "hint": {
-            "en": "The unique BTicino module ID associated with this lock. You can find this in Settings > Debug & Diagnostics.",
-            "it": "L'ID univoco del modulo BTicino associato a questa serratura. Puoi trovarlo in Impostazioni > Debug e Diagnostica."
+            "en": "The unique BTicino module ID associated with this device. You can find this in Settings > Debug & Diagnostics.",
+            "it": "L'ID univoco del modulo BTicino associato a questo dispositivo. Puoi trovarlo in Impostazioni > Debug e Diagnostica."
+          }
+        },
+        {
+          "id": "cameraIndex",
+          "type": "label",
+          "label": {
+            "en": "Channel Index",
+            "it": "Indice Canale"
+          },
+          "value": "0",
+          "hint": {
+            "en": "Channel index for this device (0 = Lock/Gate, 1 = Main outdoor camera, >1 = Secondary cameras).",
+            "it": "Indice del canale per questo dispositivo (0 = Serratura/Cancello, 1 = Telecamera principale posto esterno, >1 = Telecamere secondarie)."
           }
         },
         {

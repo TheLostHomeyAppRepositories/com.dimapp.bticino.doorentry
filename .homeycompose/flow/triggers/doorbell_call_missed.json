@@ -1,0 +1,25 @@
+{
+  "id": "doorbell_call_missed",
+  "title": {
+    "en": "Doorbell call missed",
+    "it": "Chiamata persa al campanello"
+  },
+  "hint": {
+    "en": "When someone rings the doorbell and nobody answers",
+    "it": "Quando qualcuno suona il campanello e nessuno risponde"
+  },
+  "tokens": [
+    {
+      "name": "timestamp",
+      "type": "string",
+      "title": {
+        "en": "Time",
+        "it": "Ora"
+      },
+      "example": {
+        "en": "12/13/2025, 6:23:39 PM",
+        "it": "13/12/2025, 18:23:39"
+      }
+    }
+  ]
+}

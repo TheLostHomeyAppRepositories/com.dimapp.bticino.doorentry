@@ -14,10 +14,22 @@
 			"no_devices": "0 dispositivi",
 			"activated_on": "Attivato il"
 		},
+		"default_camera_name": "Telecamera",
+		"indoor_camera_name": "Telecamera Interna",
+		"outdoor_camera_name": "Telecamera Esterna",
 		"success_message": "Ora puoi chiudere questa finestra."
 	},
 	"device": {
-		"account_disconnected": "L'account BTicino è disconnesso. Esegui il repair del dispositivo per riconnettere."
+		"account_disconnected": "L'account BTicino è disconnesso. Esegui il repair del dispositivo per riconnettere.",
+		"camera_video_title": "Telecamera",
+		"camera_image_title": "Istantanea"
+	},
+	"errors": {
+		"device_not_found": "Dispositivo non trovato",
+		"device_not_camera": "Il dispositivo selezionato non è una telecamera",
+		"snapshot_unsupported": "Il dispositivo selezionato non supporta lo scatto di istantanee",
+		"snapshot_timeout": "Tempo scaduto per l'acquisizione dell'istantanea",
+		"snapshot_empty": "Acquisizione istantanea fallita (immagine vuota ricevuta)"
 	},
 	"settings": {
 		"title": "Impostazioni BTicino Door Entry",

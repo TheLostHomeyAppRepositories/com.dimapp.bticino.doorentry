@@ -1,0 +1,11 @@
+{
+  "id": "service_is_connected",
+  "title": {
+    "en": "BTicino service !{{is|is not}} connected",
+    "it": "Il servizio BTicino !{{è|non è}} connesso"
+  },
+  "hint": {
+    "en": "Check if the app is currently connected to the BTicino cloud service",
+    "it": "Verifica se l'app è attualmente connessa al servizio cloud BTicino"
+  }
+}

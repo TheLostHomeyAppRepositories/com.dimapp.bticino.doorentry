@@ -1,18 +1,22 @@
 {
   "name": "com.dimapp.bticino.doorentry",
-  "version": "1.2.2",
+  "version": "2.0.0",
   "main": "app.js",
   "scripts": {
-    "debug:local": "node dev-scripts/sync-local-lib.js && homey app run --r",
+    "debug": "node dev-scripts/sync-local-lib.js && homey app run --r",
     "debug:github": "npm install && homey app run --r",
-    "install:local": "node dev-scripts/sync-local-lib.js && homey app install",
+    "install": "node dev-scripts/sync-local-lib.js && homey app install",
     "install:github": "npm install && homey app install",
-    "publish": "node dev-scripts/publish-app.js"
+    "publish": "node dev-scripts/publish-app.js",
+    "testcards:enable": "node dev-scripts/toggle-test-cards.js enable",
+    "testcards:disable": "node dev-scripts/toggle-test-cards.js disable"
   },
   "devDependencies": {
     "@types/homey": "npm:homey-apps-sdk-v3-types@^0.3.12"
   },
   "dependencies": {
-    "door-entry": "git+https://github.com/s-dimaio/BTicinoDoorEntry.git#v2.0.13"
+    "door-entry": "git+https://github.com/s-dimaio/BTicinoDoorEntry.git#v2.1.0",
+    "h264decoder": "^1.0.0",
+    "jpeg-js": "^0.4.4"
   }
 }

@@ -1,12 +1,39 @@
+# Homey & environment secrets
 /env.json
+.env
+.env.*
+*.env
+
+# Certificates, private keys & credential dumps
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+certs/
+token/
+json/
+userdata/
+token_cache.json
+sip_account.json
+client-certs.json
+
+# Dependencies & Homey build artifacts
 /node_modules/
 /.homeybuild/
+
+# Logs & backups
 /log/
+logs/
+*.log
 bck/
-.homeyignore
+
+# Local scripts, IDE & agent files
 *.bat
 *.code-workspace
 *.ps1
 /AI_PROJECT_HANDBOOK.md
 /dev-scripts/
 .agents/
+/test/

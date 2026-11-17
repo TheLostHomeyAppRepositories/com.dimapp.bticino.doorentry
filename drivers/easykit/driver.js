@@ -318,11 +318,11 @@ module.exports = class BticinoLockDriver extends Homey.Driver {
     });
 
     session.setHandler("list_devices", async () => {
-      this.log('onPair - ListDevices called');
+      this.log('[BticinoLockDriver:list_devices] Discovery requested by user');
       // If plantId is not selected yet, return empty list
       try {
         if (!plantId) {
-          this.log('list_devices: no plantId selected yet');
+          this.log('[BticinoLockDriver:list_devices] No plantId selected yet');
           return [];
         }
 
@@ -330,33 +330,99 @@ module.exports = class BticinoLockDriver extends Homey.Driver {
         const modules = await api.getModules(plantId);
         if (!Array.isArray(modules) || modules.length === 0) return [];
 
-        // Filter only lock devices
-        const locks = modules.filter(m => m && String(m.device) === 'lock');
-
-        // Map to Homey pairing list format: at minimum provide name and unique data
-        const devices = locks.map((m) => {
+        // 1. Discover lock / gate modules
+        const lockModules = modules.filter(m => m && String(m.device) === 'lock');
+        const locks = lockModules.map((m) => {
           const id = m.id || m.entityId || m.internalId || null;
           const name = m.name || m.displayName || id || 'Lock';
           const gatewayId = m.gatewayId || m.parentId || null;
 
           return {
             name: name,
+            icon: '/lock.svg',
             data: {
-              id: String(id)
+              id: String(id),
+              deviceType: 'lock'
             },
             store: {
-              gatewayId: gatewayId
+              gatewayId: gatewayId,
+              deviceType: 'lock',
+              moduleId: String(id)
             },
             settings: {
-              gateId: String(id)
+              moduleId: String(id),
+              cameraIndex: '0'
             }
           };
         }).filter(d => d.data && d.data.id);
 
-        this.log(`list_devices: returning ${devices.length} lock(s)`);
-        return devices;
+        // 2. Discover camera modules (device: 'audioVideoTerminal' and deviceType === 'EU')
+        const cameraModules = modules.filter(m => {
+          if (!m || String(m.device) !== 'audioVideoTerminal') return false;
+          // Ignore Internal Units (IU) - they are indoor intercom stations without camera sensors
+          if (m.deviceType === 'IU') return false;
+          return true;
+        });
+
+        const cameras = [];
+        const fallbackCameraName = this.homey.__('pair.default_camera_name') || 'Telecamera';
+
+        for (const m of cameraModules) {
+          const id = m.id || m.entityId || m.internalId || null;
+          if (!id) continue;
+
+          let visibleCount = 1;
+          try {
+            const privAddr = (m.tags || []).find(t => t && t.key === 'PrivateAddress');
+            if (privAddr && privAddr.value) {
+              const parsed = typeof privAddr.value === 'string' ? JSON.parse(privAddr.value) : privAddr.value;
+              if (parsed && parsed.visible !== undefined) {
+                const parsedVisible = parseInt(parsed.visible, 10);
+                if (!isNaN(parsedVisible) && parsedVisible > 0) {
+                  visibleCount = parsedVisible;
+                }
+              }
+            }
+          } catch (_) {}
+
+          const gatewayId = m.gatewayId || m.parentId || null;
+          const rawName = (m.name || m.displayName || '').trim();
+          const cameraModuleName = rawName || fallbackCameraName;
+
+          for (let camIdx = 1; camIdx <= visibleCount; camIdx++) {
+            const deviceId = camIdx === 1 ? String(id) : `${id}_cam${camIdx}`;
+            const devName = visibleCount > 1
+              ? `${cameraModuleName} ${camIdx}`
+              : cameraModuleName;
+
+            cameras.push({
+              name: devName,
+              icon: '/camera.svg',
+              data: {
+                id: deviceId,
+                deviceType: 'camera'
+              },
+              store: {
+                gatewayId: gatewayId,
+                deviceType: 'camera',
+                moduleId: String(id),
+                cameraId: String(id),
+                cameraIndex: camIdx,
+                deviceModuleType: m.deviceType || 'EU'
+              },
+              settings: {
+                moduleId: String(id),
+                cameraIndex: String(camIdx)
+              }
+            });
+          }
+        }
+
+        const allDevices = [...locks, ...cameras];
+        this.log(`[BticinoLockDriver:list_devices] Discovered ${locks.length} lock(s) and ${cameras.length} camera(s) (total: ${allDevices.length})`);
+        return allDevices;
       } catch (e) {
-        this.error('[Pairing] list_devices failed:', e && e.message ? e.message : e);
+        this.error('[BticinoLockDriver:list_devices] Discovery failed:', e && e.message ? e.message : e);
         return [];
       }
     });

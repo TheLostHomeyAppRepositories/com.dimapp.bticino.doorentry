@@ -2,6 +2,7 @@
 
 const Homey = require('homey');
 const os = require('os');
+const path = require('path');
 const { BticinoAuthentication } = require('door-entry');
 
 const DEFAULT_PROXY_PORT = 3123;
@@ -132,6 +133,190 @@ module.exports = class BticinoApp extends Homey.App {
     }
   }
 
+  /**
+   * Check if the application is currently authenticated and connected to the BTicino SIP service.
+   *
+   * @public
+   * @returns {boolean} True if the SIP listener is active, connected, and registered; false otherwise.
+   * @example
+   * const isConnected = this.isServiceConnected();
+   */
+  isServiceConnected() {
+    try {
+      if (!this.auth || typeof this.auth.isSipListenerConnected !== 'function') {
+        return false;
+      }
+      return this.auth.isSipListenerConnected();
+    } catch (e) {
+      this.error('Error checking isServiceConnected:', e && e.message);
+      return false;
+    }
+  }
+
+  /**
+   * Triggers the doorbell_rang Flow card immediately when someone rings the doorbell.
+   * Provides the localized timestamp token without snapshot delay.
+   *
+   * @public
+   * @async
+   * @param {Object} [options={}] - Options object.
+   * @param {Object} [options.callInfo=null] - Optional SIP call information.
+   * @returns {Promise<boolean>} True if trigger fired successfully.
+   *
+   * @example
+   * await app.triggerDoorbellRang();
+   */
+  async triggerDoorbellRang({ callInfo = null } = {}) {
+    try {
+      this.log('[BticinoApp:triggerDoorbellRang] Initiating doorbell_rang flow trigger sequence...');
+
+      // Format timestamp using user's locale and timezone
+      const userLanguage = this.homey.i18n.getLanguage();
+      const userTimezone = await this.homey.clock.getTimezone();
+      const callTime = callInfo && callInfo.timestamp ? new Date(callInfo.timestamp) : new Date();
+      const formattedTime = callTime.toLocaleString(userLanguage, {
+        timeZone: userTimezone,
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+
+      const tokens = {
+        timestamp: formattedTime
+      };
+
+      if (this._doorbellTrigger) {
+        this.log(`[BticinoApp:triggerDoorbellRang] Flow trigger fired: doorbell_rang at ${formattedTime}`);
+        this._doorbellTrigger.trigger(tokens)
+          .then(() => {
+            this.log(`[BticinoApp:triggerDoorbellRang] Downstream Flow execution completed for doorbell_rang (${formattedTime})`);
+          })
+          .catch((err) => {
+            this.error('[BticinoApp:triggerDoorbellRang] Error during doorbell_rang Flow execution:', err && err.message ? err.message : err);
+          });
+        return true;
+      } else {
+        this.error('[BticinoApp:triggerDoorbellRang] _doorbellTrigger card not initialized');
+        return false;
+      }
+    } catch (e) {
+      this.error('[BticinoApp:triggerDoorbellRang] Failed to trigger doorbell flow:', e && e.message ? e.message : e);
+      return false;
+    }
+  }
+
+  /**
+   * Finds the primary outdoor camera device (channel index 1, or first available camera).
+   *
+   * @private
+   * @returns {Homey.Device|null} The resolved camera device or null.
+   *
+   * @example
+   * const cam = this._findPrimaryOutdoorCamera();
+   */
+  _findPrimaryOutdoorCamera() {
+    let driver = null;
+    try {
+      driver = this.homey.drivers.getDriver('easykit');
+    } catch (_) {}
+
+    if (driver && typeof driver.getDevices === 'function') {
+      const devices = driver.getDevices();
+      return devices.find((d) => {
+        if (typeof d.getClass !== 'function' || d.getClass() !== 'camera') return false;
+        const camIdx = Number(d.getSetting('cameraIndex') || d.getStoreValue('cameraIndex') || 1);
+        return camIdx === 1;
+      }) || devices.find((d) => typeof d.getClass === 'function' && d.getClass() === 'camera') || null;
+    }
+    return null;
+  }
+
+  /**
+   * Triggers the doorbell_call_missed Flow card when a doorbell ring was not answered by any device.
+   * Emits a clean event providing strictly the localized timestamp token.
+   *
+   * @public
+   * @async
+   * @param {Object} [options={}] - Options object.
+   * @param {Object} [options.callInfo=null] - Optional SIP call information.
+   * @returns {Promise<boolean>} True if trigger fired successfully.
+   *
+   * @example
+   * await app.triggerDoorbellCallMissed();
+   */
+  async triggerDoorbellCallMissed({ callInfo = null } = {}) {
+    try {
+      this.log('[BticinoApp:triggerDoorbellCallMissed] Initiating doorbell_call_missed flow trigger sequence...');
+
+      const userLanguage = this.homey.i18n.getLanguage();
+      const userTimezone = await this.homey.clock.getTimezone();
+      const callTime = callInfo && callInfo.timestamp ? new Date(callInfo.timestamp) : new Date();
+      const formattedTime = callTime.toLocaleString(userLanguage, {
+        timeZone: userTimezone,
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+
+      const tokens = {
+        timestamp: formattedTime
+      };
+
+      if (this._doorbellCallMissedTrigger) {
+        this.log(`[BticinoApp:triggerDoorbellCallMissed] Flow trigger fired: doorbell_call_missed at ${formattedTime}`);
+        this._doorbellCallMissedTrigger.trigger(tokens)
+          .then(() => {
+            this.log(`[BticinoApp:triggerDoorbellCallMissed] Downstream Flow execution completed for doorbell_call_missed (${formattedTime})`);
+          })
+          .catch((err) => {
+            this.error('[BticinoApp:triggerDoorbellCallMissed] Error during doorbell_call_missed Flow execution:', err && err.message ? err.message : err);
+          });
+        return true;
+      } else {
+        this.error('[BticinoApp:triggerDoorbellCallMissed] _doorbellCallMissedTrigger card not initialized');
+        return false;
+      }
+    } catch (e) {
+      this.error('[BticinoApp:triggerDoorbellCallMissed] Failed to trigger doorbell_call_missed flow:', e && e.message ? e.message : e);
+      return false;
+    }
+  }
+
+  /**
+   * Simulates a missed doorbell call for test and diagnostic purposes.
+   * Emits 'sip:callMissed' on the authentication orchestrator or directly triggers doorbell_call_missed.
+   *
+   * @public
+   * @async
+   * @param {Object} [options={}] - Simulation options.
+   * @param {string} [options.reason='simulation'] - Reason descriptor for the simulated missed call.
+   * @returns {Promise<boolean>} True if the simulation event was triggered successfully.
+   *
+   * @example
+   * await app.simulateMissedCall({ reason: 'diagnostic_test' });
+   */
+  async simulateMissedCall({ reason = 'simulation' } = {}) {
+    this.log(`[BticinoApp:simulateMissedCall] Emitting sip:callMissed event to simulate missed doorbell call (reason: ${reason})...`);
+    const timestamp = new Date().toISOString();
+    if (this.auth && typeof this.auth.emit === 'function') {
+      this.auth.emit('sip:callMissed', {
+        reason,
+        timestamp
+      });
+      return true;
+    }
+
+    return this.triggerDoorbellCallMissed({
+      callInfo: { reason, timestamp }
+    });
+  }
+
   _getDebugEnabled() {
     const debugEnabled = this.homey.settings.get('debugEnabled');
     return debugEnabled === true || debugEnabled === 'true';
@@ -228,52 +413,31 @@ module.exports = class BticinoApp extends Homey.App {
     };
 
     this._onSipInvite = async (callInfo) => {
-      this.log('[SIP] Incoming INVITE received (doorbell ringing)');
+      this.log(`[BticinoApp:_onSipInvite] Incoming INVITE received (doorbell ringing). From: ${callInfo && callInfo.from ? callInfo.from : 'unknown'}`);
+      if (callInfo) {
+        this.log(`[BticinoApp:_onSipInvite] Call-ID: ${callInfo.callId || 'unknown'}`);
+        if (callInfo.body) {
+          this.log(`[BticinoApp:_onSipInvite] Incoming INVITE SDP body (${callInfo.body.length} chars):\n${callInfo.body}`);
+        } else {
+          this.log('[BticinoApp:_onSipInvite] Incoming INVITE contains no SDP body');
+        }
+      }
       
-      // Trigger the Flow card
       try {
-        // Extract gatewayId from the 'from' field
-        const fromMatch = callInfo && callInfo.from ? callInfo.from.match(/@([0-9a-f-]+)\.bs\.iotleg\.com/) : null;
+        // Extract gatewayId from 'from' field if present and match with saved gatewayId
+        const fromMatch = callInfo && callInfo.from ? callInfo.from.match(/@([0-9a-f-]+)\.bs\.iotleg\.com/i) : null;
+        const sipGatewayId = fromMatch ? fromMatch[1].toLowerCase() : null;
+        const savedGatewayId = (this.homey.settings.get('gatewayId') || '').toLowerCase();
         
-        if (!fromMatch || !fromMatch[1]) {
-          this.log('[SIP] Could not extract gatewayId from SIP message');
+        // Filter: only ignore if both are explicitly present and do not match
+        if (sipGatewayId && savedGatewayId && sipGatewayId !== savedGatewayId) {
+          this.log(`[BticinoApp:_onSipInvite] Ignoring call from different gateway: ${sipGatewayId} (saved: ${savedGatewayId})`);
           return;
         }
-        
-        const sipGatewayId = fromMatch[1];
-        const savedGatewayId = this.homey.settings.get('gatewayId');
-        
-        // Filter: only trigger if gatewayId matches
-        if (sipGatewayId !== savedGatewayId) {
-          this.log(`[SIP] Ignoring call from different gateway: ${sipGatewayId} (saved: ${savedGatewayId})`);
-          return;
-        }
-        
-        this.log('[SIP] Gateway ID matched, triggering flow');
-        
-        // Get user's language and timezone from Homey settings
-        const userLanguage = this.homey.i18n.getLanguage();
-        const userTimezone = await this.homey.clock.getTimezone();
-        
-        // Format timestamp using user's locale and timezone
-        const formattedTime = new Date(callInfo.timestamp || Date.now()).toLocaleString(userLanguage, {
-          timeZone: userTimezone,
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit'
-        });
-        
-        const tokens = {
-          timestamp: formattedTime
-        };
-        
-        await this._doorbellTrigger.trigger(tokens);
-        this.log('[Flow] Trigger fired successfully: doorbell_rang at', formattedTime);
+
+        await this.triggerDoorbellRang({ callInfo });
       } catch (e) {
-        this.error('[Flow] Failed to trigger doorbell flow:', e && e.message);
+        this.error('[BticinoApp:_onSipInvite] Failed to process doorbell SIP invite:', e && e.message ? e.message : e);
       }
     };
 
@@ -312,15 +476,35 @@ module.exports = class BticinoApp extends Homey.App {
       this.error('[SIP] Certificate update failed:', err && err.message ? err.message : err);
     };
 
+    this._onSipCallMissed = async (callInfo) => {
+      this.log(`[BticinoApp:_onSipCallMissed] Doorbell call was missed (unanswered). Reason: ${callInfo && callInfo.reason ? callInfo.reason : 'timeout'}`);
+      try {
+        await this.triggerDoorbellCallMissed({ callInfo });
+      } catch (e) {
+        this.error('[BticinoApp:_onSipCallMissed] Error processing missed call flow:', e && e.message ? e.message : e);
+      }
+    };
+
+    this._onSipCallAnswered = (callInfo) => {
+      this.log(`[BticinoApp:_onSipCallAnswered] Doorbell call was answered on another device. Reason: ${callInfo && callInfo.reason ? callInfo.reason : 'cause=200'}`);
+    };
+
+    this._onSipCallEnded = (info) => {
+      this.log(`[BticinoApp:_onSipCallEnded] SIP call ended by server (${info && info.method ? info.method : 'unknown'}). Gateway 2-wire bus released`);
+    };
+
     // Attach handlers
     this.auth.on('sip:connected', this._onSipConnected);
     this.auth.on('sip:registered', this._onSipRegistered);
     this.auth.on('sip:keepalive', this._onSipKeepalive);
     this.auth.on('sip:invite', this._onSipInvite);
+    this.auth.on('sip:callMissed', this._onSipCallMissed);
+    this.auth.on('sip:callAnswered', this._onSipCallAnswered);
     this.auth.on('sip:disconnected', this._onSipDisconnected);
     this.auth.on('sip:error', this._onSipError);
     this.auth.on('sip:certificatesUpdated', this._onSipCertificatesUpdated);
     this.auth.on('sip:certificateUpdateError', this._onSipCertificateUpdateError);
+    this.auth.on('sip:callEnded', this._onSipCallEnded);
   }
 
   _detachSipListenerHandlers() {
@@ -342,6 +526,14 @@ module.exports = class BticinoApp extends Homey.App {
       this.auth.off('sip:invite', this._onSipInvite);
       this._onSipInvite = null;
     }
+    if (this._onSipCallMissed) {
+      this.auth.off('sip:callMissed', this._onSipCallMissed);
+      this._onSipCallMissed = null;
+    }
+    if (this._onSipCallAnswered) {
+      this.auth.off('sip:callAnswered', this._onSipCallAnswered);
+      this._onSipCallAnswered = null;
+    }
     if (this._onSipDisconnected) {
       this.auth.off('sip:disconnected', this._onSipDisconnected);
       this._onSipDisconnected = null;
@@ -357,6 +549,10 @@ module.exports = class BticinoApp extends Homey.App {
     if (this._onSipCertificateUpdateError) {
       this.auth.off('sip:certificateUpdateError', this._onSipCertificateUpdateError);
       this._onSipCertificateUpdateError = null;
+    }
+    if (this._onSipCallEnded) {
+      this.auth.off('sip:callEnded', this._onSipCallEnded);
+      this._onSipCallEnded = null;
     }
 
     this.log('SIP listener handlers detached');
@@ -554,9 +750,58 @@ module.exports = class BticinoApp extends Homey.App {
 
     // Register Flow trigger cards
     this._doorbellTrigger = this.homey.flow.getTriggerCard('doorbell_rang');
+    this._doorbellCallMissedTrigger = this.homey.flow.getTriggerCard('doorbell_call_missed');
     this._serviceConnectedTrigger = this.homey.flow.getTriggerCard('service_connected');
     this._serviceDisconnectedTrigger = this.homey.flow.getTriggerCard('service_disconnected');
-    this.log('Flow trigger cards registered: doorbell_rang, service_connected, service_disconnected');
+    this.log('Flow trigger cards registered: doorbell_rang, doorbell_call_missed, service_connected, service_disconnected');
+
+    // Register Flow condition cards
+    this._serviceConnectedCondition = this.homey.flow.getConditionCard('service_is_connected');
+    this._serviceConnectedCondition.registerRunListener(async (args, state) => {
+      const isConnected = this.isServiceConnected();
+      this.log(`[Flow] Condition checked: service_is_connected -> ${isConnected}`);
+      return isConnected;
+    });
+    this.log('Flow condition cards registered: service_is_connected');
+
+    // Register Flow action cards
+    this._takeSnapshotAction = this.homey.flow.getActionCard('take_snapshot');
+    this._takeSnapshotAction.registerRunListener(async (args) => {
+      this.log(`[BticinoApp:takeSnapshotAction] Action take_snapshot executing for device: ${args && args.device ? args.device.getName() : 'unknown'}`);
+      if (!args || !args.device) {
+        throw new Error(this.homey.__('errors.device_not_found') || 'No device provided');
+      }
+      if (typeof args.device.getClass !== 'function' || args.device.getClass() !== 'camera') {
+        throw new Error(this.homey.__('errors.device_not_camera') || 'Selected device is not a camera');
+      }
+      if (typeof args.device.captureSnapshot !== 'function') {
+        throw new Error(this.homey.__('errors.snapshot_unsupported') || 'Device does not support snapshot capture');
+      }
+
+      const updatedSlotImage = await args.device.captureSnapshot({ forceFresh: true });
+      const cameraSlotImage = (typeof args.device.getCameraImage === 'function' && args.device.getCameraImage()) || updatedSlotImage;
+      if (!cameraSlotImage) {
+        throw new Error(this.homey.__('errors.snapshot_empty') || 'Camera image slot not available');
+      }
+
+      this.log(`[BticinoApp:takeSnapshotAction] Snapshot captured and camera image slot (${cameraSlotImage.id || 'default'}) updated for ${args.device.getName()}`);
+      return { snapshot: cameraSlotImage };
+    });
+
+    // Register optional test action card if present in manifest (disabled in production release)
+    try {
+      this._simulateMissedCallAction = this.homey.flow.getActionCard('simulate_missed_call');
+      if (this._simulateMissedCallAction) {
+        this._simulateMissedCallAction.registerRunListener(async () => {
+          return this.simulateMissedCall({ reason: 'simulation' });
+        });
+        this.log('[BticinoApp:onInit] Test flow action card registered: simulate_missed_call');
+      }
+    } catch (_) {
+      // Flow card not defined in manifest - test action hidden from end users in production
+    }
+
+    this.log('[BticinoApp:onInit] Flow action cards initialized');
 
     // Attach SIP listener event handlers
     this._attachSipListenerHandlers();
